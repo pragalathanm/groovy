@@ -47,8 +47,6 @@ import java.util.Stack;
 
 /**
  * Base class for representing lazy evaluated GPath expressions.
- *
- * @author John Wilson
  */
 public abstract class GPathResult extends GroovyObjectSupport implements Writable, Buildable, Iterable {
     protected final GPathResult parent;
@@ -414,7 +412,7 @@ public abstract class GPathResult extends GroovyObjectSupport implements Writabl
      * &lt;characterList&gt;
      *   &lt;character/&gt;
      *   &lt;character&gt;
-     *     &lt;name>Gromit&lt;/name&gt;
+     *     &lt;name&gt;Gromit&lt;/name&gt;
      *   &lt;/character&gt;
      * &lt;/characterList&gt;"""
      *
@@ -454,7 +452,7 @@ public abstract class GPathResult extends GroovyObjectSupport implements Writabl
      * <pre class="groovyTestCase">
      * import groovy.util.slurpersupport.*
      * def text = """
-     * &lt;characterList>
+     * &lt;characterList&gt;
      *   &lt;character&gt;Wallace&lt;/character&gt;
      *   &lt;character&gt;Gromit&lt;/character&gt;
      *   &lt;character&gt;Shaun&lt;/character&gt;

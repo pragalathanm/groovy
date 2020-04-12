@@ -32,7 +32,6 @@ import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
 /**
  * This class is used to describe generic type signatures for ClassNodes.
  *
- * @author Jochen Theodorou
  * @see ClassNode
  */
 public class GenericsType extends ASTNode {
@@ -310,7 +309,7 @@ public class GenericsType extends ASTNode {
             }
             if (lowerBound!=null) {
                 if (!lowerBound.redirect().isUsingGenerics()) {
-                    if (!compareGenericsWithBound(classNode, lowerBound)) return false;
+                    return compareGenericsWithBound(classNode, lowerBound);
                 }
             }
             return true;
@@ -325,7 +324,7 @@ public class GenericsType extends ASTNode {
          */
         private boolean compareGenericsWithBound(final ClassNode classNode, final ClassNode bound) {
             if (classNode==null) return false;
-            if (!bound.isUsingGenerics() || (classNode.getGenericsTypes()==null && classNode.redirect().getGenericsTypes()!=null)) {
+            if (bound.getGenericsTypes() == null || (classNode.getGenericsTypes()==null && classNode.redirect().getGenericsTypes()!=null)) {
                 // if the bound is not using generics, there's nothing to compare with
                 return true;
             }

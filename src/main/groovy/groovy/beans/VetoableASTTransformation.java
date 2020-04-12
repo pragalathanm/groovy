@@ -35,7 +35,6 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
-import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.objectweb.asm.Opcodes;
@@ -44,6 +43,7 @@ import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
 import java.beans.VetoableChangeSupport;
 
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.assignS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callThisX;
@@ -52,11 +52,13 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.declS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.fieldX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+import static org.codehaus.groovy.runtime.MetaClassHelper.capitalize;
 
 /**
  * Handles generation of code for the {@code @Vetoable} annotation, and {@code @Bindable}
@@ -71,9 +73,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
  * <p>
  * If a {@link Bindable} annotation is detected it also adds support similar
  * to what {@link BindableASTTransformation} would do.
- *
- * @author Danno Ferrin (shemnon)
- * @author Chris Reeves
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 public class VetoableASTTransformation extends BindableASTTransformation {
@@ -168,15 +167,15 @@ public class VetoableASTTransformation extends BindableASTTransformation {
      * Wrap an existing setter.
      */
     private static void wrapSetterMethod(ClassNode classNode, boolean bindable, String propertyName) {
-        String getterName = "get" + MetaClassHelper.capitalize(propertyName);
-        MethodNode setter = classNode.getSetterMethod("set" + MetaClassHelper.capitalize(propertyName));
+        String getterName = "get" + capitalize(propertyName);
+        MethodNode setter = classNode.getSetterMethod("set" + capitalize(propertyName));
 
         if (setter != null) {
             // Get the existing code block
             Statement code = setter.getCode();
 
-            Expression oldValue = varX("$oldValue");
-            Expression newValue = varX("$newValue");
+            Expression oldValue = localVarX("$oldValue");
+            Expression newValue = localVarX("$newValue");
             Expression proposedValue = varX(setter.getParameters()[0].getName());
             BlockStatement block = new BlockStatement();
 
@@ -210,7 +209,7 @@ public class VetoableASTTransformation extends BindableASTTransformation {
         if (needsVetoableChangeSupport(declaringClass, source)) {
             addVetoableChangeSupport(declaringClass);
         }
-        String setterName = "set" + MetaClassHelper.capitalize(propertyNode.getName());
+        String setterName = "set" + capitalize(propertyNode.getName());
         if (declaringClass.getMethods(setterName).isEmpty()) {
             Expression fieldExpression = fieldX(propertyNode.getField());
             BlockStatement setterBlock = new BlockStatement();
@@ -320,7 +319,7 @@ public class VetoableASTTransformation extends BindableASTTransformation {
                 setterBlock);
         setter.setSynthetic(true);
         // add it to the class
-        declaringClass.addMethod(setter);
+        addGeneratedMethod(declaringClass, setter);
     }
 
     /**
@@ -354,7 +353,7 @@ public class VetoableASTTransformation extends BindableASTTransformation {
         // void addVetoableChangeListener(listener) {
         //     this$vetoableChangeSupport.addVetoableChangeListener(listener)
         //  }
-        declaringClass.addMethod(
+        addGeneratedMethod(declaringClass,
                 new MethodNode(
                         "addVetoableChangeListener",
                         ACC_PUBLIC,
@@ -367,7 +366,7 @@ public class VetoableASTTransformation extends BindableASTTransformation {
         // void addVetoableChangeListener(name, listener) {
         //     this$vetoableChangeSupport.addVetoableChangeListener(name, listener)
         //  }
-        declaringClass.addMethod(
+        addGeneratedMethod(declaringClass,
                 new MethodNode(
                         "addVetoableChangeListener",
                         ACC_PUBLIC,
@@ -380,7 +379,7 @@ public class VetoableASTTransformation extends BindableASTTransformation {
         // boolean removeVetoableChangeListener(listener) {
         //    return this$vetoableChangeSupport.removeVetoableChangeListener(listener);
         // }
-        declaringClass.addMethod(
+        addGeneratedMethod(declaringClass,
                 new MethodNode(
                         "removeVetoableChangeListener",
                         ACC_PUBLIC,
@@ -390,7 +389,7 @@ public class VetoableASTTransformation extends BindableASTTransformation {
                         stmt(callX(fieldX(vcsField), "removeVetoableChangeListener", args(varX("listener", vclClassNode))))));
 
         // add method: void removeVetoableChangeListener(name, listener)
-        declaringClass.addMethod(
+        addGeneratedMethod(declaringClass,
                 new MethodNode(
                         "removeVetoableChangeListener",
                         ACC_PUBLIC,
@@ -405,7 +404,7 @@ public class VetoableASTTransformation extends BindableASTTransformation {
         // {
         //     this$vetoableChangeSupport.fireVetoableChange(name, oldValue, newValue)
         //  }
-        declaringClass.addMethod(
+        addGeneratedMethod(declaringClass,
                 new MethodNode(
                         "fireVetoableChange",
                         ACC_PUBLIC,
@@ -418,7 +417,7 @@ public class VetoableASTTransformation extends BindableASTTransformation {
         // VetoableChangeListener[] getVetoableChangeListeners() {
         //   return this$vetoableChangeSupport.getVetoableChangeListeners
         // }
-        declaringClass.addMethod(
+        addGeneratedMethod(declaringClass,
                 new MethodNode(
                         "getVetoableChangeListeners",
                         ACC_PUBLIC,
@@ -431,7 +430,7 @@ public class VetoableASTTransformation extends BindableASTTransformation {
         // VetoableChangeListener[] getVetoableChangeListeners(String name) {
         //   return this$vetoableChangeSupport.getVetoableChangeListeners(name)
         // }
-        declaringClass.addMethod(
+        addGeneratedMethod(declaringClass,
                 new MethodNode(
                         "getVetoableChangeListeners",
                         ACC_PUBLIC,

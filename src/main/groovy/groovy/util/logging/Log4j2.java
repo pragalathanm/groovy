@@ -38,6 +38,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Locale;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
+
 /**
  * This local transform adds a logging ability to your program using
  * Log4j2 logging. Every method call on a unbound variable named <i>log</i>
@@ -85,10 +87,12 @@ public @interface Log4j2 {
                             new ConstantExpression(getCategoryName(classNode, categoryName))));
         }
 
+        @Override
         public boolean isLoggingMethod(String methodName) {
             return methodName.matches("fatal|error|warn|info|debug|trace");
         }
 
+        @Override
         public Expression wrapLoggingMethodCall(Expression logVariable, String methodName, Expression originalExpression) {
             MethodCallExpression condition = new MethodCallExpression(
                     logVariable,
@@ -99,7 +103,7 @@ public @interface Log4j2 {
             return new TernaryExpression(
                     new BooleanExpression(condition),
                     originalExpression,
-                    ConstantExpression.NULL);
+                    nullX());
         }
     }
 }

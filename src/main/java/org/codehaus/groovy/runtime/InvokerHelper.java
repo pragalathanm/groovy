@@ -212,7 +212,7 @@ public class InvokerHelper {
             GroovyObject pogo = (GroovyObject) object;
             pogo.setProperty(property, newValue);
         } else if (object instanceof Class) {
-            metaRegistry.getMetaClass((Class) object).setProperty((Class) object, property, newValue);
+            metaRegistry.getMetaClass((Class) object).setProperty(object, property, newValue);
         } else {
             ((MetaClassRegistryImpl) GroovySystem.getMetaClassRegistry()).getMetaClass(object).setProperty(object, property, newValue);
         }
@@ -263,7 +263,7 @@ public class InvokerHelper {
     public static Object unaryMinus(Object value) {
         if (value instanceof Integer) {
             Integer number = (Integer) value;
-            return Integer.valueOf(-number.intValue());
+            return -number;
         }
         if (value instanceof Long) {
             Long number = (Long) value;
@@ -285,11 +285,11 @@ public class InvokerHelper {
         }
         if (value instanceof Short) {
             Short number = (Short) value;
-            return Short.valueOf((short) -number.shortValue());
+            return (short) -number;
         }
         if (value instanceof Byte) {
             Byte number = (Byte) value;
-            return Byte.valueOf((byte) -number.byteValue());
+            return (byte) -number;
         }
         if (value instanceof ArrayList) {
             // value is a list.
@@ -414,7 +414,7 @@ public class InvokerHelper {
         if (message == null || "".equals(message)) {
             throw new PowerAssertionError(expression.toString());
         }
-        throw new AssertionError(String.valueOf(message) + ". Expression: " + expression);
+        throw new AssertionError(message + ". Expression: " + expression);
     }
 
     public static Object runScript(Class scriptClass, String[] args) {
@@ -439,7 +439,7 @@ public class InvokerHelper {
                 if (Script.class.isAssignableFrom(scriptClass)) {
                     script = newScript(scriptClass, context);
                 } else {
-                    final GroovyObject object = (GroovyObject) scriptClass.newInstance();
+                    final GroovyObject object = (GroovyObject) scriptClass.getDeclaredConstructor().newInstance();
                     // it could just be a class, so let's wrap it in a Script
                     // wrapper; though the bindings will be ignored
                     script = new Script(context) {
@@ -937,11 +937,11 @@ public class InvokerHelper {
         }
         if (value instanceof String) {
             // value is a regular expression.
-            return StringGroovyMethods.bitwiseNegate((CharSequence)value.toString());
+            return StringGroovyMethods.bitwiseNegate(value.toString());
         }
         if (value instanceof GString) {
             // value is a regular expression.
-            return StringGroovyMethods.bitwiseNegate((CharSequence)value.toString());
+            return StringGroovyMethods.bitwiseNegate(value.toString());
         }
         if (value instanceof ArrayList) {
             // value is a list.

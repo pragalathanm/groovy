@@ -29,7 +29,7 @@ import org.codehaus.groovy.control.SourceUnit;
  * This can optionally use a generic type of the selected parameter as the hint. For example, imagine the following
  * method:</p>
  * <code>void foo(A firstArg, B secondArg, Closure c) {...}</code>
- * <p>If the <i>c</i> closure should be <code>{ B it -> ...}</code>, then we can see that the parameter type
+ * <p>If the <i>c</i> closure should be <code>{ B it {@code ->} ...}</code>, then we can see that the parameter type
  * should be picked from the second parameter of the foo method, which is what {@link groovy.transform.stc.PickAnyArgumentHint}
  * lets you do.</p>
  * <p>Alternatively, the method may look like this:</p>
@@ -39,7 +39,6 @@ import org.codehaus.groovy.control.SourceUnit;
  * <p></p>
  * <p>This class is extended by several hint providers that make it easier to use as annotation values.</p>
  *
- * @author Cédric Champeau
  * @since 2.3.0
  */
 public class PickAnyArgumentHint extends SingleSignatureClosureHint {

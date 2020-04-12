@@ -219,7 +219,7 @@ public class AsmClassGenerator extends ClassGenerator {
             Object min = classNode.getNodeMetaData(MINIMUM_BYTECODE_VERSION);
             if (min instanceof Integer) {
                 int minVersion = (int) min;
-                if (bytecodeVersion < minVersion) {
+                if ((bytecodeVersion ^ Opcodes.V_PREVIEW) < minVersion) {
                     bytecodeVersion = minVersion;
                 }
             }
@@ -989,6 +989,7 @@ public class AsmClassGenerator extends ClassGenerator {
                                             new ClassExpression(outer),
                                             expression.getProperty()
                                     );
+                                    pexp.getObjectExpression().setSourcePosition(objectExpression);
                                     pexp.visit(controller.getAcg());
                                     return;
                                 }
@@ -1061,6 +1062,10 @@ public class AsmClassGenerator extends ClassGenerator {
                 iterType = iterType.getOuterClass();
                 if (thisField == null) {
                     // closure within inner class
+                    while (iterType.isDerivedFrom(ClassHelper.CLOSURE_TYPE)) {
+                        // GROOVY-8881: cater for closures within closures - getThisObject is already outer class of all closures
+                        iterType = iterType.getOuterClass();
+                    }
                     mv.visitMethodInsn(INVOKEVIRTUAL, BytecodeHelper.getClassInternalName(ClassHelper.CLOSURE_TYPE), "getThisObject", "()Ljava/lang/Object;", false);
                     mv.visitTypeInsn(CHECKCAST, BytecodeHelper.getClassInternalName(iterType));
                 } else {
@@ -1619,7 +1624,7 @@ public class AsmClassGenerator extends ClassGenerator {
             if (!(expr instanceof SpreadExpression)) {
                 normalArguments.add(expr);
             } else {
-                spreadIndexes.add(new ConstantExpression(Integer.valueOf(i - spreadExpressions.size()),true));
+                spreadIndexes.add(new ConstantExpression(i - spreadExpressions.size(),true));
                 spreadExpressions.add(((SpreadExpression) expr).getExpression());
             }
         }

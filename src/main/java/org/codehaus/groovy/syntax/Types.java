@@ -27,18 +27,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-
 /**
  *  Typing information for the CST system.  The types here are those
  *  used by CSTNode, Token, and Reduction.
- *
- *  @author <a href="mailto:bob@werken.com">bob mcwhirter</a>
- *  @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  */
-
-public class Types
-{
-
+public class Types  {
 
   //---------------------------------------------------------------------------
   // TYPES: NOTE THAT ORDERING AND VALUES ARE IMPORTANT TO LOCAL ROUTINES!
@@ -308,6 +301,7 @@ public class Types
     public static final int REGEX_COMPARISON_OPERATOR   = 1105;  // =~, etc.
     public static final int DEREFERENCE_OPERATOR        = 1106;  // ., ->
     public static final int BITWISE_OPERATOR            = 1107;  // |, &, <<, >>, >>>, ^, ~
+    public static final int INSTANCEOF_OPERATOR         = 1108;  // instanceof
 
     public static final int PREFIX_OPERATOR             = 1200;  // ++, !, etc.
     public static final int POSTFIX_OPERATOR            = 1210;  // ++, etc.
@@ -350,8 +344,6 @@ public class Types
     public static final int SIMPLE_EXPRESSION           = 1910;  // LITERAL, this, true, false, null
     public static final int COMPLEX_EXPRESSION          = 1911;  // SIMPLE_EXPRESSION, and various molecules
 
-
-
     //
     // TYPE GROUPS (OPERATIONS SUPPORT)
 
@@ -368,13 +360,8 @@ public class Types
 
     public static final int PRECLUDES_CAST_OPERATOR     = 2008;  // anything that prevents (X) from being a cast
 
-
-
-
-
   //---------------------------------------------------------------------------
   // TYPE HIERARCHIES
-
 
    /**
     *  Given two types, returns true if the second describes the first.
@@ -424,6 +411,9 @@ public class Types
 
             case COMPARISON_OPERATOR:
                 return specific >= COMPARE_NOT_EQUAL && specific <= COMPARE_TO;
+
+            case INSTANCEOF_OPERATOR:
+                return specific == KEYWORD_INSTANCEOF;
 
             case MATH_OPERATOR:
                 return (specific >= PLUS && specific <= RIGHT_SHIFT_UNSIGNED) || (specific >= NOT && specific <= LOGICAL_AND)
@@ -1412,6 +1402,7 @@ public class Types
         addDescription( PREFIX_OPERATOR             , "<prefix operator>"            );
         addDescription( POSTFIX_OPERATOR            , "<postfix operator>"           );
         addDescription( INFIX_OPERATOR              , "<infix operator>"             );
+        addDescription( INSTANCEOF_OPERATOR         , "<instanceof operator>"        );
         addDescription( KEYWORD                     , "<keyword>"                    );
         addDescription( LITERAL                     , "<literal>"                    );
         addDescription( NUMBER                      , "<number>"                     );

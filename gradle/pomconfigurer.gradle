@@ -29,19 +29,18 @@ project.ext.pomConfigureClosureWithoutTweaks = {
     project {
         name 'Apache Groovy'
         description 'Groovy: A powerful, dynamic language for the JVM'
-        url 'http://groovy-lang.org'
+        url 'https://groovy-lang.org'
         inceptionYear '2003'
         organization {
             name 'Apache Software Foundation'
-            url 'http://groovy-lang.org'
+            url 'https://apache.org'
         }
         developers {
             developer {
                 id 'glaforge'
                 name 'Guillaume Laforge'
-                organization 'SpringSource'
+                organization = 'Google'
                 roles {
-                    role 'Project Manager'
                     role 'Despot'
                     role 'Developer'
                 }
@@ -50,7 +49,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'bob'
                 name 'bob mcwhirter'
                 email 'bob@werken.com'
-                organization 'The Werken Company'
+                organization = 'The Werken Company'
                 roles {
                     role 'Founder'
                 }
@@ -59,7 +58,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'jstrachan'
                 name 'James Strachan'
                 email 'james@coredevelopers.com'
-                organization 'Core Developers Network'
+                organization = 'Core Developers Network'
                 roles {
                     role 'Founder'
                 }
@@ -67,7 +66,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
             developer {
                 id 'joe'
                 name 'Joe Walnes'
-                organization 'ThoughtWorks'
+                organization = 'ThoughtWorks'
                 roles {
                     role 'Developer Emeritus'
                 }
@@ -75,7 +74,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
             developer {
                 id 'skizz'
                 name 'Chris Stevenson'
-                organization 'ThoughtWorks'
+                organization = 'ThoughtWorks'
                 roles {
                     role 'Developer Emeritus'
                 }
@@ -83,7 +82,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
             developer {
                 id 'jamiemc'
                 name 'Jamie McCrindle'
-                organization 'Three'
+                organization = 'Three'
                 roles {
                     role 'Developer Emeritus'
                 }
@@ -91,7 +90,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
             developer {
                 id 'mattf'
                 name 'Matt Foemmel'
-                organization 'ThoughtWorks'
+                organization = 'ThoughtWorks'
                 roles {
                     role 'Developer Emeritus'
                 }
@@ -143,7 +142,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'jwilson'
                 name 'John Wilson'
                 email 'tug@wilson.co.uk'
-                organization 'The Wilson Partnership'
+                organization = 'The Wilson Partnership'
                 roles {
                     role 'Developer Emeritus'
                 }
@@ -160,7 +159,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'ckl'
                 name 'Christiaan ten Klooster'
                 email 'ckl@dacelo.nl'
-                organization 'Dacelo WebDevelopment'
+                organization = 'Dacelo WebDevelopment'
                 roles {
                     role 'Developer Emeritus'
                 }
@@ -169,7 +168,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'goetze'
                 name 'Steve Goetze'
                 email 'goetze@dovetail.com'
-                organization 'Dovetailed Technologies, LLC'
+                organization = 'Dovetailed Technologies, LLC'
                 roles {
                     role 'Developer Emeritus'
                 }
@@ -178,7 +177,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'bran'
                 name 'Bing Ran'
                 email 'b55r@sina.com'
-                organization 'Leadingcare'
+                organization = 'Leadingcare'
                 roles {
                     role 'Developer Emeritus'
                 }
@@ -187,7 +186,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'jez'
                 name 'Jeremy Rayner'
                 email 'jeremy.rayner@gmail.com'
-                organization 'javanicus'
+                organization = 'javanicus'
                 roles {
                     role 'Developer Emeritus'
                 }
@@ -213,7 +212,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'russel'
                 name 'Russel Winder'
                 email 'russel@winder.org.uk'
-                organization 'Concertant LLP & It\'z Interactive Ltd'
+                organization = 'Concertant LLP & It\'z Interactive Ltd'
                 roles {
                     role 'Developer'
                     role 'Founder of Gant'
@@ -231,7 +230,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'cstein'
                 name 'Christian Stein'
                 email 'sormuras@gmx.de'
-                organization 'CTSR.de'
+                organization = 'CTSR.de'
                 roles {
                     role 'Developer Emeritus'
                 }
@@ -239,8 +238,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
             developer {
                 id 'mittie'
                 name 'Dierk Koenig'
-                email 'dierk.koenig@canoo.com'
-                organization 'Canoo Engineering AG'
+                organization = 'Karakun AG'
                 roles {
                     role 'Developer'
                 }
@@ -249,8 +247,9 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'paulk'
                 name 'Paul King'
                 email 'paulk@asert.com.au'
-                organization 'ASERT, Australia'
+                organization = 'OCI, Australia'
                 roles {
+                    role 'Project Manager'
                     role 'Developer'
                     role 'Despot'
                 }
@@ -312,7 +311,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 id 'jimwhite'
                 name 'Jim White'
                 email 'jim@pagesmiths.com'
-                organization 'IFCX.org'
+                organization = 'IFCX.org'
                 roles {
                     role 'Developer'
                 }
@@ -365,6 +364,28 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                     role 'Despot'
                 }
             }
+            developer {
+                id 'rpopma'
+                name 'Remko Popma'
+                roles {
+                    role 'Developer'
+                }
+            }
+            developer {
+                id 'grocher'
+                name 'Graeme Rocher'
+                roles {
+                    role 'Developer'
+                }
+            }
+            developer {
+                id 'emilles'
+                name 'Eric Milles'
+                organization = 'Thomson Reuters'
+                roles {
+                    role 'Developer'
+                }
+            }
         }
         contributors {
             contributor {
@@ -411,7 +432,16 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 name 'Ivan Z. Ganza'
             }
             contributor {
+                name 'Larry Jacobson'
+            }
+            contributor {
+                name 'Jake Gage'
+            }
+            contributor {
                 name 'Arjun Nayyar'
+            }
+            contributor {
+                name 'Masato Nagai'
             }
             contributor {
                 name 'Mark Chu-Carroll'
@@ -435,7 +465,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 name 'Edwin Tellman'
             }
             contributor {
-                name 'Evan A Slatis'
+                name 'Evan "Hippy" Slatis'
             }
             contributor {
                 name 'Mike Dillon'
@@ -460,7 +490,43 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 name 'Ted Naleid'
             }
             contributor {
+                name 'Ted Leung'
+            }
+            contributor {
+                name 'Merrick Schincariol'
+            }
+            contributor {
                 name 'Chanwit Kaewkasi'
+            }
+            contributor {
+                name 'Stefan Matthias Aust'
+            }
+            contributor {
+                name 'Andy Dwelly'
+            }
+            contributor {
+                name 'Philip Milne'
+            }
+            contributor {
+                name 'Tiago Fernandez'
+            }
+            contributor {
+                name 'Steve Button'
+            }
+            contributor {
+                name 'Joachim Baumann'
+            }
+            contributor {
+                name 'Jochen Eddel+'
+            }
+            contributor {
+                name 'Ilinca V. Hallberg'
+            }
+            contributor {
+                name 'Björn Westlin'
+            }
+            contributor {
+                name 'Andrew Glover'
             }
             contributor {
                 name 'Brad Long'
@@ -526,7 +592,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 name 'Jan Weitz'
             }
             contributor {
-                name 'Joachim Baumann'
+                name 'Chris K Wensel'
             }
             contributor {
                 name 'David Sutherland'
@@ -565,6 +631,12 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 name 'Mike Spille'
             }
             contributor {
+                name 'Nikolay Chugunov'
+            }
+            contributor {
+                name 'Francesco Durbin'
+            }
+            contributor {
                 name 'Paolo Di Tommaso'
             }
             contributor {
@@ -572,6 +644,9 @@ project.ext.pomConfigureClosureWithoutTweaks = {
             }
             contributor {
                 name 'Matias Bjarland'
+            }
+            contributor {
+                name 'Tomasz Bujok'
             }
             contributor {
                 name 'Richard Hightower'
@@ -584,6 +659,45 @@ project.ext.pomConfigureClosureWithoutTweaks = {
             }
             contributor {
                 name 'Nick Grealy'
+            }
+            contributor {
+                name 'Vaclav Pech'
+            }
+            contributor {
+                name 'Chuck Tassoni'
+            }
+            contributor {
+                name 'Steven Devijver'
+            }
+            contributor {
+                name 'Ben Manes'
+            }
+            contributor {
+                name 'Troy Heninger'
+            }
+            contributor {
+                name 'Andrew Eisenberg'
+            }
+            contributor {
+                name 'Eric Milles'
+            }
+            contributor {
+                name 'Kohsuke Kawaguchi'
+            }
+            contributor {
+                name 'Scott Vlaminck'
+            }
+            contributor {
+                name 'Hjalmar Ekengren'
+            }
+            contributor {
+                name 'Rafael Luque'
+            }
+            contributor {
+                name 'Joachim Heldmann'
+            }
+            contributor {
+                name 'dgouyette'
             }
             contributor {
                 name 'Marcin Grzejszczak'
@@ -601,19 +715,67 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 name 'Alan Green'
             }
             contributor {
+                name 'Marty Saxton'
+            }
+            contributor {
+                name 'Marcel Overdijk'
+            }
+            contributor {
+                name 'Jonathan Carlson'
+            }
+            contributor {
+                name 'Thomas Heller'
+            }
+            contributor {
+                name 'John Stump'
+            }
+            contributor {
+                name 'Ivan Ganza'
+            }
+            contributor {
                 name 'Alex Popescu'
             }
             contributor {
                 name 'Martin Kempf'
             }
             contributor {
+                name 'Martin Ghados'
+            }
+            contributor {
+                name 'Martin Stockhammer'
+            }
+            contributor {
+                name 'Martin C. Martin'
+            }
+            contributor {
+                name 'Alexey Verkhovsky'
+            }
+            contributor {
+                name 'Alberto Mijares'
+            }
+            contributor {
+                name 'Matthias Cullmann'
+            }
+            contributor {
+                name 'Tomek Bujok'
+            }
+            contributor {
                 name 'Stephane Landelle'
+            }
+            contributor {
+                name 'Stephane Maldini'
+            }
+            contributor {
+                name 'Mark Volkmann'
+            }
+            contributor {
+                name 'Andrew Taylor'
             }
             contributor {
                 name 'Vladimir Vivien'
             }
             contributor {
-                name 'Graeme Rocher'
+                name 'Vladimir Orany'
             }
             contributor {
                 name 'Joe Wolf'
@@ -625,13 +787,25 @@ project.ext.pomConfigureClosureWithoutTweaks = {
                 name 'Tom Nichols'
             }
             contributor {
-                name 'Remko Popma'
+                name 'Ingo Hoffmann'
+            }
+            contributor {
+                name 'Sergii Bondarenko'
             }
             contributor {
                 name 'mgroovy'
             }
             contributor {
                 name 'Dominik Przybysz'
+            }
+            contributor {
+                name 'Jason Thomas'
+            }
+            contributor {
+                name 'Trygve Amundsens'
+            }
+            contributor {
+                name 'Morgan Hankins'
             }
             contributor {
                 name 'Shruti Gupta'
@@ -645,15 +819,27 @@ project.ext.pomConfigureClosureWithoutTweaks = {
             contributor {
                 name 'Lidia Donajczyk-Lipinska'
             }
+            contributor {
+                name 'Peter Gromov'
+            }
+            contributor {
+                name 'Johannes Link'
+            }
+            contributor {
+                name 'Chris Reeves'
+            }
+            contributor {
+                name 'Sean Timm'
+            }
         }
         mailingLists {
             mailingList {
                 name 'Groovy Developer List'
-                archive 'http://mail-archives.apache.org/mod_mbox/groovy-dev/'
+                archive 'https://mail-archives.apache.org/mod_mbox/groovy-dev/'
             }
             mailingList {
                 name 'Groovy User List'
-                archive 'http://mail-archives.apache.org/mod_mbox/groovy-users/'
+                archive 'https://mail-archives.apache.org/mod_mbox/groovy-users/'
             }
         }
         licenses {
@@ -665,7 +851,7 @@ project.ext.pomConfigureClosureWithoutTweaks = {
         }
         issueManagement {
             system 'jira'
-            url 'http://issues.apache.org/jira/browse/GROOVY'
+            url 'https://issues.apache.org/jira/browse/GROOVY'
         }
         scm {
             connection 'scm:git:https://github.com/apache/groovy.git'
@@ -699,7 +885,7 @@ project.ext.pomConfigureClosure = {
         // add 'packaging' node
         pom.withXml { xmlProvider ->
             def xml = xmlProvider.asString()
-            def pomXml = new XmlParser().parse(new ByteArrayInputStream(xml.toString().bytes))
+            def pomXml = new XmlParser().parse(new ByteArrayInputStream(xml.toString().getBytes("UTF-8")))
 
             pomXml.version[0] + { packaging('jar') }
 

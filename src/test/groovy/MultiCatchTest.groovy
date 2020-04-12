@@ -18,12 +18,12 @@
  */
 package groovy
 
+import groovy.cli.CliBuilderException
+
 /**
  * Test for the multi-catch exception from JDK 7 (Project Coin)
- *
- * @author Cedric Champeau
  */
-class MultiCatchTest extends GroovyTestCase{
+class MultiCatchTest extends GroovyTestCase {
 
     void testDynamicCatch() {
         def catched = false
@@ -117,5 +117,14 @@ class MultiCatchTest extends GroovyTestCase{
             catched = true
         }
         assert catched
+    }
+
+    // GROOVY-8238
+    void testMultipleCatchGroovyAndJavaExceptions() {
+        try {
+            throw new RuntimeException('boom')
+        } catch ( RuntimeException | CliBuilderException e ) {
+            assert e.message == 'boom'
+        }
     }
 }

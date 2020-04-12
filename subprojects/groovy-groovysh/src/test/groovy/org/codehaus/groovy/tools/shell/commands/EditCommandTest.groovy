@@ -18,10 +18,10 @@
  */
 package org.codehaus.groovy.tools.shell.commands
 
+import static groovy.test.GroovyAssert.isAtLeastJdk
+
 /**
  * Tests for the {@link EditCommand} class.
- *
- * @author <a href="mailto:4larryj@gmail.com">Larry Jacobson</a>
  */
 class EditCommandTest
     extends CommandTestSupport
@@ -35,8 +35,7 @@ class EditCommandTest
 
         // GROOVY-6201: Editor should inherit I/O from the current process.
         //    Fixed only for java >= 1.7 using new ProcessBuilder api
-        def javaVer = Double.valueOf(System.getProperty('java.specification.version'))
-        if (javaVer >= 1.7) {
+        if (isAtLeastJdk('1.7')) {
             assert pb.redirectInput() == ProcessBuilder.Redirect.INHERIT
             assert pb.redirectOutput() == ProcessBuilder.Redirect.INHERIT
         }

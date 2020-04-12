@@ -22,8 +22,6 @@ import java.util.EventObject;
 
 /**
  * An event used to propagate meta class updates
- *
- * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  */
 public class MetaClassRegistryChangeEvent extends EventObject {
     private static final long serialVersionUID = 1647849176793457976L;
@@ -35,7 +33,7 @@ public class MetaClassRegistryChangeEvent extends EventObject {
     /**
      *Constructs a new MetaClassRegistryChangeEvent Object
      *
-     * @param source The object the the event originates at.
+     * @param source The object the event originates at.
      * @param instance Object instance  the MetaClass change is on.
      * @param clazz  The class that is affected by the registry change
      * @param oldMetaClass The old MetaClass

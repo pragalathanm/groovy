@@ -21,12 +21,10 @@ package groovy.util.logging
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
+import static groovy.test.GroovyAssert.isAtLeastJdk
+
 /**
  * Unit test for the commons logging @Log based annotation.
- *
- * @author Hamlet D'Arcy
- * @author Matthias Cullmann
- * 
  */
 class CommonsTest extends GroovyTestCase {
 
@@ -114,7 +112,7 @@ class CommonsTest extends GroovyTestCase {
             new MyClass().loggingMethod() ''')
 
         clazz.newInstance().run()
-        
+
         String log = redirectedSystemOut.toString()
         assert log.contains("error called")
         assert log.contains("warn called")
@@ -133,7 +131,7 @@ class CommonsTest extends GroovyTestCase {
             MyClass.loggingMethod()""")
 
         clazz.newInstance().run()
-        
+
         String log = redirectedSystemOut.toString()
         assert log.contains("(static) info called")
     }
@@ -153,7 +151,7 @@ class CommonsTest extends GroovyTestCase {
             new MyClass().loggingMethod() ''')
 
         clazz.newInstance().run()
-        
+
         String log = redirectedSystemOut.toString()
         assert log.contains("error called")
         assert log.contains("warn called")
@@ -162,6 +160,11 @@ class CommonsTest extends GroovyTestCase {
     }
 
     void testLogGuards() {
+        // JDK12+ doesn't allow adjusting static final fields even via reflection
+        // so skip this test on such JDK versions - it is only this test which is affected
+        // and currently we have coverage from builds with lower JDK versions.
+        if (isAtLeastJdk('12')) return
+
         Class clazz = new GroovyClassLoader().parseClass('''
             class LogDecorator extends groovy.util.Proxy {
                 boolean isTraceEnabled() { false }

@@ -91,8 +91,6 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isClas
  * A call site writer which replaces call site caching with static calls. This means that the generated code
  * looks more like Java code than dynamic Groovy code. Best effort is made to use JVM instructions instead of
  * calls to helper methods.
- *
- * @author Cedric Champeau
  */
 public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes {
 
@@ -204,11 +202,6 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
             // we are probably looking for a property of the class
             if (makeGetPropertyWithGetter(receiver, CLASS_Type, methodName, safe, implicitThis)) return;
             if (makeGetField(receiver, CLASS_Type, methodName, safe, false, true)) return;
-        }
-        if (receiverType.isEnum()) {
-            mv.visitFieldInsn(GETSTATIC, BytecodeHelper.getClassInternalName(receiverType), methodName, BytecodeHelper.getTypeDescription(receiverType));
-            controller.getOperandStack().push(receiverType);
-            return;
         }
         if (makeGetPrivateFieldWithBridgeMethod(receiver, receiverType, methodName, safe, implicitThis)) return;
 
@@ -632,21 +625,25 @@ public class StaticTypesCallSiteWriter extends CallSiteWriter implements Opcodes
         return false;
     }
 
-    private static boolean isDirectAccessAllowed(FieldNode a, ClassNode receiver, boolean isSamePackage) {
-        ClassNode declaringClass = a.getDeclaringClass().redirect();
+    private static boolean isDirectAccessAllowed(FieldNode field, ClassNode receiver, boolean isSamePackage) {
+        ClassNode declaringClass = field.getDeclaringClass().redirect();
         ClassNode receiverType = receiver.redirect();
 
-        // first, direct access from within the class or inner class nodes
+        // first, direct access from within the class
         if (declaringClass.equals(receiverType)) return true;
-        if (receiverType instanceof InnerClassNode) {
-            while (receiverType instanceof InnerClassNode) {
-                if (declaringClass.equals(receiverType)) return true;
-                receiverType = receiverType.getOuterClass();
+        if (field.isPrivate()) return false;
+
+        // now, inner class node access to outer class fields
+        receiverType = receiverType.getOuterClass();
+        while (receiverType != null) {
+            if (declaringClass.equals(receiverType)) {
+                return true;
             }
+            receiverType = receiverType.getOuterClass();
         }
 
-        // no getter
-        return a.isPublic() || (a.isProtected() && isSamePackage);
+        // finally public and inherited
+        return field.isPublic() || isSamePackage;
     }
 
     @Override

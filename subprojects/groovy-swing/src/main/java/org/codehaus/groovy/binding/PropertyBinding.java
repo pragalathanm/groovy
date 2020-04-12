@@ -46,8 +46,6 @@ import java.util.logging.Logger;
 
 
 /**
- * @author <a href="mailto:shemnon@yahoo.com">Danno Ferrin</a>
- * @author Andres Almiray
  * @since Groovy 1.1
  */
 public class PropertyBinding implements SourceBinding, TargetBinding, TriggerBinding {
@@ -157,8 +155,8 @@ public class PropertyBinding implements SourceBinding, TargetBinding, TriggerBin
         }
 
         try {
-            return accessorClass.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+            return accessorClass.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
             return DefaultPropertyAccessor.INSTANCE;
         }
     }

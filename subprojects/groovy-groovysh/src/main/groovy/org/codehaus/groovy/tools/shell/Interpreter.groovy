@@ -27,8 +27,6 @@ import java.lang.reflect.Method
 
 /**
  * Helper to interpret a source buffer.
- *
- * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
 class Interpreter implements Evaluator
 {
@@ -58,6 +56,10 @@ class Interpreter implements Evaluator
 
     GroovyClassLoader getClassLoader() {
         return shell.classLoader
+    }
+
+    GroovyShell getShell() {
+        return shell
     }
 
     @Override

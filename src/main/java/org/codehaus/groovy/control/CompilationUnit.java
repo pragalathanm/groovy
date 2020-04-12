@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.classgen.AsmClassGenerator;
@@ -73,10 +74,6 @@ import java.util.Map;
  * <p>
  * You can also add PhaseOperations to this compilation using the addPhaseOperation method.
  * This is commonly used when you want to wire a new AST Transformation into the compilation.
- *
- * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
- * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
- * @author <a href="mailto:roshandawrani@codehaus.org">Roshan Dawrani</a>
  */
 
 public class CompilationUnit extends ProcessingUnit {
@@ -86,10 +83,14 @@ public class CompilationUnit extends ProcessingUnit {
 
     protected ASTTransformationsContext astTransformationsContext; // AST transformations state data
 
-    protected Map<String, SourceUnit> sources;    // The SourceUnits from which this unit is built
+    @Deprecated
     protected Map summariesBySourceName;      // Summary of each SourceUnit
+    @Deprecated
     protected Map summariesByPublicClassName;       // Summary of each SourceUnit
+    @Deprecated
     protected Map classSourcesByPublicClassName;    // Summary of each Class
+
+    protected Map<String, SourceUnit> sources;    // The SourceUnits from which this unit is built
     protected List<String> names;      // Names for each SourceUnit in sources.
     protected LinkedList<SourceUnit> queuedSources;
 
@@ -340,18 +341,7 @@ public class CompilationUnit extends ProcessingUnit {
     public void configure(CompilerConfiguration configuration) {
         super.configure(configuration);
         this.debug = configuration.getDebug();
-
-        if (!this.configured && this.classLoader instanceof GroovyClassLoader) {
-            appendCompilerConfigurationClasspathToClassLoader(configuration, (GroovyClassLoader) this.classLoader);
-        }
-
         this.configured = true;
-    }
-
-    private void appendCompilerConfigurationClasspathToClassLoader(CompilerConfiguration configuration, GroovyClassLoader classLoader) {
-        /*for (Iterator iterator = configuration.getClasspath().iterator(); iterator.hasNext(); ) {
-            classLoader.addClasspath((String) iterator.next());
-        }*/
     }
 
     /**
@@ -361,21 +351,22 @@ public class CompilationUnit extends ProcessingUnit {
         return this.ast;
     }
 
-    /**
-     * Get the source summaries
-     */
+    @Deprecated
     public Map getSummariesBySourceName() {
         return summariesBySourceName;
     }
 
+    @Deprecated
     public Map getSummariesByPublicClassName() {
         return summariesByPublicClassName;
     }
 
+    @Deprecated
     public Map getClassSourcesByPublicClassName() {
         return classSourcesByPublicClassName;
     }
 
+    @Deprecated
     public boolean isPublicClass(String className) {
         return summariesByPublicClassName.containsKey(className);
     }
@@ -808,31 +799,36 @@ public class CompilationUnit extends ProcessingUnit {
             return true;
         }
 
-        public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
+        public void call(final SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
 
             optimizer.visitClass(classNode, source); // GROOVY-4272: repositioned it here from staticImport
 
             //
             // Run the Verifier on the outer class
             //
+            GroovyClassVisitor visitor = verifier;
             try {
-                verifier.visitClass(classNode);
+                visitor.visitClass(classNode);
             } catch (GroovyRuntimeException rpe) {
-                ASTNode node = rpe.getNode();
-                getErrorCollector().addError(
-                        new SyntaxException(rpe.getMessage(), node.getLineNumber(), node.getColumnNumber(), node.getLastLineNumber(), node.getLastColumnNumber()),
-                        source
-                );
+                getErrorCollector().addError(new SyntaxException(rpe.getMessage(), rpe.getNode()), source);
             }
 
-            LabelVerifier lv = new LabelVerifier(source);
-            lv.visitClass(classNode);
+            visitor = new LabelVerifier(source);
+            visitor.visitClass(classNode);
 
-            ClassCompletionVerifier completionVerifier = new ClassCompletionVerifier(source);
-            completionVerifier.visitClass(classNode);
+            visitor = new InstanceOfVerifier() {
+                @Override
+                protected SourceUnit getSourceUnit() {
+                    return source;
+                }
+            };
+            visitor.visitClass(classNode);
 
-            ExtendedVerifier xverifier = new ExtendedVerifier(source);
-            xverifier.visitClass(classNode);
+            visitor = new ClassCompletionVerifier(source);
+            visitor.visitClass(classNode);
+
+            visitor = new ExtendedVerifier(source);
+            visitor.visitClass(classNode);
 
             // because the class may be generated even if a error was found
             // and that class may have an invalid format we fail here if needed
@@ -841,7 +837,7 @@ public class CompilationUnit extends ProcessingUnit {
             //
             // Prep the generator machinery
             //
-            ClassVisitor visitor = createClassVisitor();
+            ClassVisitor classVisitor = createClassVisitor();
             
             String sourceName = (source == null ? classNode.getModule().getDescription() : source.getName());
             // only show the file name and its extension like javac does in its stacktraces rather than the full path
@@ -850,21 +846,21 @@ public class CompilationUnit extends ProcessingUnit {
                 sourceName = sourceName.substring(Math.max(sourceName.lastIndexOf('\\'), sourceName.lastIndexOf('/')) + 1);
             //TraceClassVisitor tracer = new TraceClassVisitor(visitor, new PrintWriter(System.err,true));
             //AsmClassGenerator generator = new AsmClassGenerator(source, context, tracer, sourceName);
-            AsmClassGenerator generator = new AsmClassGenerator(source, context, visitor, sourceName);
+            AsmClassGenerator generator = new AsmClassGenerator(source, context, classVisitor, sourceName);
 
             //
             // Run the generation and create the class (if required)
             //
             generator.visitClass(classNode);
 
-            byte[] bytes = ((ClassWriter) visitor).toByteArray();
+            byte[] bytes = ((ClassWriter) classVisitor).toByteArray();
             generatedClasses.add(new GroovyClass(classNode.getName(), bytes));
 
             //
             // Handle any callback that's been set
             //
             if (CompilationUnit.this.classgenCallback != null) {
-                classgenCallback.call(visitor, classNode);
+                classgenCallback.call(classVisitor, classNode);
             }
 
             //
@@ -893,15 +889,8 @@ public class CompilationUnit extends ProcessingUnit {
                 // try inner classes
                 cn = cu.getGeneratedInnerClass(name);
                 if (cn!=null) return cn;
-                // try class loader classes
-                try {
-                    cn = ClassHelper.make(
-                            cu.getClassLoader().loadClass(name,false,true),
-                            false);
-                } catch (Exception e) {
-                    throw new GroovyBugError(e);
-                }
-                return cn;
+                ClassNodeResolver.LookupResult lookupResult = getClassNodeResolver().resolveName(name, CompilationUnit.this);
+                return lookupResult == null ? null : lookupResult.getClassNode();
             }
             private ClassNode getCommonSuperClassNode(ClassNode c, ClassNode d) {
                 // adapted from ClassWriter code

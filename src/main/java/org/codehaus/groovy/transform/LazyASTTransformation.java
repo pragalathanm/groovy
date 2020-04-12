@@ -52,7 +52,9 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.declS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ifElseS;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.notNullX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
@@ -67,7 +69,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 public class LazyASTTransformation extends AbstractASTTransformation {
 
     private static final ClassNode SOFT_REF = makeWithoutCaching(SoftReference.class, false);
-    private static final Expression NULL_EXPR = ConstantExpression.NULL;
+    private static final Expression NULL_EXPR = nullX();
 
     public void visit(ASTNode[] nodes, SourceUnit source) {
         init(nodes, source);
@@ -140,7 +142,7 @@ public class LazyASTTransformation extends AbstractASTTransformation {
 
     private static void addDoubleCheckedLockingBody(BlockStatement body, FieldNode fieldNode, Expression initExpr) {
         final Expression fieldExpr = varX(fieldNode);
-        final VariableExpression localVar = varX(fieldNode.getName() + "_local");
+        final VariableExpression localVar = localVarX(fieldNode.getName() + "_local");
         body.addStatement(declS(localVar, fieldExpr));
         body.addStatement(ifElseS(
                 notNullX(localVar),
@@ -183,7 +185,7 @@ public class LazyASTTransformation extends AbstractASTTransformation {
     private static void createSoftGetter(FieldNode fieldNode, Expression initExpr, ClassNode type) {
         final BlockStatement body = new BlockStatement();
         final Expression fieldExpr = varX(fieldNode);
-        final Expression resExpr = varX("res", type);
+        final Expression resExpr = localVarX("_result", type);
         final MethodCallExpression callExpression = callX(fieldExpr, "get");
         callExpression.setSafe(true);
         body.addStatement(declS(resExpr, callExpression));

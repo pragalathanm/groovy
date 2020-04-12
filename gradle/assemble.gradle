@@ -108,7 +108,7 @@ ext.allManifest = manifest {
             'Bundle-ClassPath': '.',
             'Eclipse-BuddyPolicy': 'dependent',
             'DynamicImport-Package': '*',
-            'Main-class': 'groovy.ui.GroovyMain')
+            'Main-Class': 'groovy.ui.GroovyMain')
 }
 
 ext.groovyOsgiManifest = {
@@ -131,7 +131,7 @@ ext.subprojectOsgiManifest = {
     // Exclude attributes not needed for subprojects.
     from(allManifest) {
         eachEntry { details ->
-            if (details.key in [*excludedFromManifest, 'Bnd-LastModified', 'Extension-Name', 'Bundle-Name', 'Bundle-Description', 'Main-class']) {
+            if (details.key in [*excludedFromManifest, 'Bnd-LastModified', 'Extension-Name', 'Bundle-Name', 'Bundle-Description', 'Main-Class']) {
                 details.exclude()
             }
         }
@@ -140,6 +140,17 @@ ext.subprojectOsgiManifest = {
     instruction '-nouses', 'true'
     instruction 'Export-Package', "*;version=${groovyBundleVersion}"
     instruction 'Fragment-Host', 'groovy'
+    def folder = new File( "${projectDir}/subprojects/${symbolicName}/src/main/resources/META-INF/services" )
+    if( folder.exists() ) {
+        if (folder.listFiles().count { it.name ==~ /^(?!(org.codehaus.groovy.transform.ASTTransformation)$).*$/ } > 0) {
+            instruction 'Require-Capability', 'osgi.extender;filter:="(osgi.extender=osgi.serviceloader.registrar)"'
+            instruction 'Require-Capability', 'osgi.extender;filter:="(osgi.extender=osgi.serviceloader.processor)"'
+            folder.eachFileMatch(~/^(?!(org.codehaus.groovy.transform.ASTTransformation)$).*$/) {
+                instruction 'Require-Capability', "osgi.serviceloader;filter:=\"(osgi.serviceloader=${it.name})\";cardinality:=multiple"
+                instruction 'Provide-Capability', "osgi.serviceloader;osgi.serviceloader=\"${it.name}\""
+            }
+        }
+    }
     classpath = sourceSets.main.runtimeClasspath
 }
 
@@ -221,11 +232,11 @@ allprojects {
                     'picocli.**'               : 'groovyjarjarpicocli.@1'
             ]
             excludesPerLibrary = [
-                    '*': ['META-INF/maven/**', 'META-INF/*', 'META-INF/services/javax.annotation.processing.Processor', 'module-info.class']
+                    '*': ['META-INF/**', '**/module-info.class']
             ]
             includesPerLibrary = [
                     'asm-util': ['org/objectweb/asm/util/Printer.class',
-                                 'org/objectweb/asm/util/Textifier.class',
+                                 'org/objectweb/asm/util/Textifier*',
                                  'org/objectweb/asm/util/ASMifier.class',
                                  'org/objectweb/asm/util/Trace*']
             ]

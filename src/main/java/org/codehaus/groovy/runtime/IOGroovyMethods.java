@@ -205,14 +205,8 @@ public class IOGroovyMethods extends DefaultGroovyMethodsSupport {
      * @since 1.0
      */
     public static OutputStream leftShift(OutputStream self, InputStream in) throws IOException {
-        byte[] buf = new byte[1024];
-        while (true) {
-            int count = in.read(buf, 0, buf.length);
-            if (count == -1) break;
-            if (count == 0) {
-                Thread.yield();
-                continue;
-            }
+        byte[] buf = new byte[DEFAULT_BUFFER_SIZE];
+        for (int count; -1 != (count = in.read(buf)); ) {
             self.write(buf, 0, count);
         }
         self.flush();
@@ -484,7 +478,7 @@ public class IOGroovyMethods extends DefaultGroovyMethodsSupport {
      * <pre>
      * def s = 'The 3 quick\nbrown 4 fox'
      * def result = ''
-     * new StringReader(s).splitEachLine(/\d/){ parts ->
+     * new StringReader(s).splitEachLine(/\d/){ parts {@code ->}
      *     result += "${parts[0]}_${parts[1]}|"
      * }
      * assert result == 'The _ quick|brown _ fox|'
@@ -514,7 +508,7 @@ public class IOGroovyMethods extends DefaultGroovyMethodsSupport {
      * <pre>
      * def s = 'The 3 quick\nbrown 4 fox'
      * def result = ''
-     * new StringReader(s).splitEachLine(~/\d/){ parts ->
+     * new StringReader(s).splitEachLine(~/\d/){ parts {@code ->}
      *     result += "${parts[0]}_${parts[1]}|"
      * }
      * assert result == 'The _ quick|brown _ fox|'
@@ -1703,4 +1697,6 @@ public class IOGroovyMethods extends DefaultGroovyMethodsSupport {
             writer.write(-2);  // FE
         }
     }
+
+    private static final int DEFAULT_BUFFER_SIZE = 8192; // 8k
 }

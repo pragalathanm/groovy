@@ -61,7 +61,7 @@ import static java.lang.reflect.Modifier.isFinal;
 import static org.apache.groovy.ast.tools.MethodNodeUtils.getPropertyName;
 
 /**
- * goes through an AST and initializes the scopes
+ * Goes through an AST and initializes the scopes.
  */
 public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
@@ -160,7 +160,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             // if we are in a class and no variable is declared until
             // now, then we can break the loop, because we are allowed
             // to declare a variable of the same name as a class member
-            if (scope.getClassScope() != null) break;
+            if (scope.getClassScope() != null && !isAnonymous(scope.getClassScope())) break;
 
             if (scope.getDeclaredVariable(var.getName()) != null) {
                 // variable already declared
@@ -204,7 +204,12 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         Variable ret = findClassMember(cn.getSuperClass(), name);
         if (ret != null) return ret;
+        if (isAnonymous(cn)) return null;
         return findClassMember(cn.getOuterClass(), name);
+    }
+
+    private static boolean isAnonymous(ClassNode node) {
+        return (!node.isEnum() && node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous());
     }
 
     // -------------------------------
@@ -221,9 +226,8 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         boolean crossingStaticContext = false;
         while (true) {
             crossingStaticContext = crossingStaticContext || scope.isInStaticContext();
-            Variable var1;
-            var1 = scope.getDeclaredVariable(var.getName());
 
+            Variable var1 = scope.getDeclaredVariable(var.getName());
             if (var1 != null) {
                 var = var1;
                 break;
@@ -252,7 +256,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                     if (!(staticScope && !staticMember))
                         var = member;
                 }
-                break;
+                // GROOVY-5961
+                if (!isAnonymous(classScope))
+                    break;
             }
             scope = scope.getParent();
         }
@@ -260,15 +266,15 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             var = new DynamicVariable(var.getName(), true);
         }
 
+        boolean isClassVariable = (scope.isClassScope() && !scope.isReferencedLocalVariable(name))
+                || (scope.isReferencedClassVariable(name) && scope.getDeclaredVariable(name) == null);
         VariableScope end = scope;
 
         scope = currentScope;
         while (scope != end) {
-            if (end.isClassScope() ||
-                    (end.isReferencedClassVariable(name) && end.getDeclaredVariable(name) == null)) {
+            if (isClassVariable) {
                 scope.putReferencedClassVariable(var);
             } else {
-                //var.setClosureSharedVariable(var.isClosureSharedVariable() || inClosure);
                 scope.putReferencedLocalVariable(var);
             }
             scope = scope.getParent();
@@ -427,8 +433,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         expression.setVariableScope(currentScope);
 
         if (expression.isParameterSpecified()) {
-            Parameter[] parameters = expression.getParameters();
-            for (Parameter parameter : parameters) {
+            for (Parameter parameter : expression.getParameters()) {
                 parameter.setInStaticContext(currentScope.isInStaticContext());
                 if (parameter.hasInitialExpression()) {
                     parameter.getInitialExpression().visit(this);
@@ -476,10 +481,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
     public void visitClass(ClassNode node) {
         // AIC are already done, doing them here again will lead to wrong scopes
-        if (node instanceof InnerClassNode) {
-            InnerClassNode in = (InnerClassNode) node;
-            if (in.isAnonymous() && !in.isEnum()) return;
-        }
+        if (isAnonymous(node)) return;
 
         pushState();
 
@@ -496,8 +498,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     }
 
     /**
-     * Setup the current class node context.
-     * @param node
+     * Sets the current class node context.
      */
     public void prepareVisit(ClassNode node) {
         currentClass = node;
@@ -509,7 +510,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         inConstructor = isConstructor;
         node.setVariableScope(currentScope);
         visitAnnotations(node);
-        
+
         // GROOVY-2156
         Parameter[] parameters = node.getParameters();
         for (Parameter parameter : parameters) {
@@ -560,24 +561,25 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         pushState();
         InnerClassNode innerClass = (InnerClassNode) call.getType();
         innerClass.setVariableScope(currentScope);
+        currentScope.setClassScope(innerClass);
+        currentScope.setInStaticContext(false);
         for (MethodNode method : innerClass.getMethods()) {
             Parameter[] parameters = method.getParameters();
-            if (parameters.length == 0) parameters = null; // null means no implicit "it"
+            if (parameters.length == 0)
+                parameters = null; // null means no implicit "it"
             ClosureExpression cl = new ClosureExpression(parameters, method.getCode());
             visitClosureExpression(cl);
         }
 
         for (FieldNode field : innerClass.getFields()) {
-            final Expression expression = field.getInitialExpression();
+            Expression expression = field.getInitialExpression();
             pushState(field.isStatic());
             if (expression != null) {
-                if (expression instanceof VariableExpression) {
-                    VariableExpression vexp = (VariableExpression) expression;
-                    if (vexp.getAccessedVariable() instanceof Parameter) {
-                        // workaround for GROOVY-6834: accessing a parameter which is not yet seen in scope
-                        popState();
-                        continue;
-                    }
+                if (expression.isSynthetic() && expression instanceof VariableExpression &&
+                        ((VariableExpression) expression).getAccessedVariable() instanceof Parameter) {
+                    // GROOVY-6834: accessing a parameter which is not yet seen in scope
+                    popState();
+                    continue;
                 }
                 expression.visit(this);
             }

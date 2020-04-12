@@ -26,8 +26,6 @@ import org.codehaus.groovy.ast.MethodNode;
 
 /**
  * A method call on an object or class
- *
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  */
 public class MethodCallExpression extends Expression implements MethodCall {
 
@@ -210,5 +208,26 @@ public class MethodCallExpression extends Expression implements MethodCall {
      */
     public MethodNode getMethodTarget() {
         return target;
+    }
+
+    @Override
+    public void setSourcePosition(ASTNode node) {
+        super.setSourcePosition(node);
+        // GROOVY-8002: propagate position to (possibly new) method expression
+        if (node instanceof MethodCall) {
+            if (node instanceof MethodCallExpression) {
+                method.setSourcePosition(((MethodCallExpression) node).getMethod());
+            } else if (node.getLineNumber() > 0) {
+                method.setLineNumber(node.getLineNumber());
+                method.setColumnNumber(node.getColumnNumber());
+                method.setLastLineNumber(node.getLineNumber());
+                method.setLastColumnNumber(node.getColumnNumber() + getMethodAsString().length());
+            }
+            if (arguments != null) {
+                arguments.setSourcePosition(((MethodCall) node).getArguments());
+            }
+        } else if (node instanceof PropertyExpression) {
+            method.setSourcePosition(((PropertyExpression) node).getProperty());
+        }
     }
 }

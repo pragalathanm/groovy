@@ -28,8 +28,6 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.sort;
 /**
  * Tests using the GroovyObject API from Java to access MBeans via
  * the normal properties API (to simulate normal Groovy property access)
- *
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  */
 public class MBeanTest extends GroovyTestCase {
 
@@ -37,7 +35,7 @@ public class MBeanTest extends GroovyTestCase {
         MBeanServer mbeanServer = MBeanServerFactory.createMBeanServer();
         ObjectName name = new ObjectName("groovy.test:role=TestMBean,type=Dummy");
         // use Class.forName instead of new Dummy() to allow separate compilation
-        mbeanServer.registerMBean(Class.forName("groovy.util.Dummy").newInstance(), name);
+        mbeanServer.registerMBean(Class.forName("groovy.util.Dummy").getDeclaredConstructor().newInstance(), name);
 
         assertEquals("JMX value of Name", "James", mbeanServer.getAttribute(name, "Name"));
 

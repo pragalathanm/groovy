@@ -41,7 +41,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.markAsGenerated;
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedConstructor;
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedInnerClass;
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.assignX;
@@ -106,7 +108,9 @@ import static org.objectweb.asm.Opcodes.ACC_SYNTHETIC;
  * </pre>
  * then the following compile-time error would result:
  * <pre>
- * [Static type checking] - Cannot find matching method Person#<init>(Person$PersonInitializer <groovy.transform.builder.InitializerStrategy$SET, groovy.transform.builder.InitializerStrategy$SET, groovy.transform.builder.InitializerStrategy$UNSET>). Please check if the declared type is right and if the method exists.
+ * {@code
+ * [Static type checking] - Cannot find matching method Person#<init>(Person$PersonInitializer <groovy.transform.builder.InitializerStrategy$SET, groovy.transform.builder.InitializerStrategy$SET, groovy.transform.builder.InitializerStrategy$UNSET>). Please check if the declared type is correct and if the method exists.
+ * }
  * </pre>
  * The message is a little cryptic, but it is basically the static compiler telling us that the third parameter, {@code age} in our case, is unset.
  *
@@ -210,14 +214,14 @@ public class InitializerStrategy extends BuilderASTTransformation.AbstractBuilde
     private void buildCommon(ClassNode buildee, AnnotationNode anno, List<FieldNode> fieldNodes, ClassNode builder) {
         String prefix = getMemberStringValue(anno, "prefix", "");
         String buildMethodName = getMemberStringValue(anno, "buildMethodName", "create");
+        addGeneratedInnerClass(buildee, builder);
         createBuilderConstructors(builder, buildee, fieldNodes);
-        buildee.getModule().addClass(builder);
         String builderMethodName = getMemberStringValue(anno, "builderMethodName", "createInitializer");
-        buildee.addMethod(createBuilderMethod(buildMethodName, builder, fieldNodes.size(), builderMethodName));
+        addGeneratedMethod(buildee, createBuilderMethod(buildMethodName, builder, fieldNodes.size(), builderMethodName));
         for (int i = 0; i < fieldNodes.size(); i++) {
-            builder.addMethod(createBuilderMethodForField(builder, fieldNodes, prefix, i));
+            addGeneratedMethod(builder, createBuilderMethodForField(builder, fieldNodes, prefix, i));
         }
-        builder.addMethod(createBuildMethod(builder, buildMethodName, fieldNodes));
+        addGeneratedMethod(builder, createBuildMethod(builder, buildMethodName, fieldNodes));
     }
 
     private static List<FieldNode> convertParamsToFields(ClassNode builder, Parameter[] parameters) {
@@ -267,22 +271,20 @@ public class InitializerStrategy extends BuilderASTTransformation.AbstractBuilde
     }
 
     private static void createBuilderConstructors(ClassNode builder, ClassNode buildee, List<FieldNode> fields) {
-        builder.addConstructor(ACC_PRIVATE, NO_PARAMS, NO_EXCEPTIONS, block(ctorSuperS()));
+        addGeneratedConstructor(builder, ACC_PRIVATE, NO_PARAMS, NO_EXCEPTIONS, block(ctorSuperS()));
         final BlockStatement body = new BlockStatement();
         body.addStatement(ctorSuperS());
         initializeFields(fields, body, false);
-        builder.addConstructor(ACC_PRIVATE, getParams(fields, buildee), NO_EXCEPTIONS, body);
+        addGeneratedConstructor(builder, ACC_PRIVATE, getParams(fields, buildee), NO_EXCEPTIONS, body);
     }
 
     private static void createBuildeeConstructors(BuilderASTTransformation transform, ClassNode buildee, ClassNode builder, List<FieldNode> fields, boolean needsConstructor, boolean useSetters) {
-        ConstructorNode initializer = createInitializerConstructor(buildee, builder, fields);
-        markAsGenerated(buildee, initializer);
+        createInitializerConstructor(buildee, builder, fields);
         if (needsConstructor) {
             final BlockStatement body = new BlockStatement();
             body.addStatement(ctorSuperS());
             initializeFields(fields, body, useSetters);
-            ConstructorNode helperCons = buildee.addConstructor(ACC_PRIVATE | ACC_SYNTHETIC, getParams(fields, buildee), NO_EXCEPTIONS, body);
-            markAsGenerated(buildee, helperCons);
+            addGeneratedConstructor(buildee, ACC_PRIVATE | ACC_SYNTHETIC, getParams(fields, buildee), NO_EXCEPTIONS, body);
         }
     }
 
@@ -294,14 +296,14 @@ public class InitializerStrategy extends BuilderASTTransformation.AbstractBuilde
             argsList.add(propX(varX(initParam), fieldNode.getName()));
         }
         String newName = "$" + mNode.getName(); // can't have private and public methods of the same name, so rename original
-        buildee.addMethod(mNode.getName(), PUBLIC_STATIC, mNode.getReturnType(), params(param(paramType, "initializer")), NO_EXCEPTIONS,
+        addGeneratedMethod(buildee, mNode.getName(), PUBLIC_STATIC, mNode.getReturnType(), params(param(paramType, "initializer")), NO_EXCEPTIONS,
                 block(stmt(callX(buildee, newName, args(argsList)))));
         renameMethod(buildee, mNode, newName);
     }
 
     // no rename so delete and add
     private static void renameMethod(ClassNode buildee, MethodNode mNode, String newName) {
-        buildee.addMethod(newName, mNode.getModifiers(), mNode.getReturnType(), mNode.getParameters(), mNode.getExceptions(), mNode.getCode());
+        addGeneratedMethod(buildee, newName, mNode.getModifiers(), mNode.getReturnType(), mNode.getParameters(), mNode.getExceptions(), mNode.getCode());
         buildee.removeMethod(mNode);
     }
 
@@ -324,7 +326,7 @@ public class InitializerStrategy extends BuilderASTTransformation.AbstractBuilde
         for (FieldNode fieldNode : fields) {
             argsList.add(propX(varX(initParam), fieldNode.getName()));
         }
-        return buildee.addConstructor(ACC_PUBLIC, params(param(paramType, "initializer")), NO_EXCEPTIONS, block(ctorThisS(args(argsList))));
+        return addGeneratedConstructor(buildee, ACC_PUBLIC, params(param(paramType, "initializer")), NO_EXCEPTIONS, block(ctorThisS(args(argsList))));
     }
 
     private static MethodNode createBuildMethod(ClassNode builder, String buildMethodName, List<FieldNode> fields) {

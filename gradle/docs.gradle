@@ -18,7 +18,7 @@
  */
 
 task doc(dependsOn: ['javadocAll', 'groovydocAll', 'docGDK', 'asciidocAll']) {
-    ext.footer = 'Copyright &copy; 2003-2018 The Apache Software Foundation. All rights reserved.'
+    ext.footer = 'Copyright &copy; 2003-2019 The Apache Software Foundation. All rights reserved.'
     ext.title = "Groovy ${groovyVersion}"
 }
 
@@ -35,15 +35,16 @@ def javadocSpec = {
     project.configure(options) {
         windowTitle = doc.title
         docTitle = doc.title
+        classpath += project.file('src/main/java')
         locale = 'en_US'
         encoding = 'UTF-8'
         version = true
         overview = rootProject.file('src/main/java/overviewj.html')
         footer = doc.footer
         source = '1.7'
-        links('http://docs.oracle.com/javase/8/docs/api/', 'http://docs.oracle.com/javaee/7/api/',
-                'http://commons.apache.org/proper/commons-cli/javadocs/api-release/', 'http://junit.org/junit4/javadoc/latest/',
-                'http://docs.oracle.com/javaee/6/api/', 'http://www.antlr2.org/javadoc/')
+        links('https://docs.oracle.com/javase/8/docs/api/', 'https://docs.oracle.com/javaee/7/api/',
+                'https://commons.apache.org/proper/commons-cli/javadocs/api-release/', 'https://junit.org/junit4/javadoc/latest/',
+                'https://docs.oracle.com/javaee/6/api/', 'https://www.antlr2.org/javadoc/')
     }
 }
 
@@ -55,15 +56,15 @@ def groovydocBaseSpec = {
     footer = doc.footer
     overviewText = rootProject.resources.text.fromFile('src/main/java/overview.html')
     includePrivate = false
-    link 'http://docs.oracle.com/javaee/7/api/', 'javax.servlet.', 'javax.management.'
-    link 'http://docs.oracle.com/javase/8/docs/api/', 'java.', 'org.xml.', 'javax.', 'org.w3c.'
-    link 'http://docs.groovy-lang.org/docs/ant/api/', 'org.apache.ant.', 'org.apache.tools.ant.'
-    link 'http://junit.org/junit4/javadoc/latest/', 'org.junit.', 'junit.'
-    link 'http://junit.org/junit5/docs/current/api/', 'org.junit.jupiter.', 'org.junit.platform.'
-    link 'http://www.antlr2.org/javadoc/', 'antlr.'
-    link 'http://www.antlr.org/api/Java/', 'org.antlr.v4.'
-    link 'http://commons.apache.org/proper/commons-cli/javadocs/api-release/', 'org.apache.commons.cli.'
-    link 'http://picocli.info/apidocs/', 'picocli.'
+    link 'https://docs.oracle.com/javaee/7/api/', 'javax.servlet.', 'javax.management.'
+    link 'https://docs.oracle.com/javase/8/docs/api/', 'java.', 'org.xml.', 'javax.', 'org.w3c.'
+    link 'https://docs.groovy-lang.org/docs/ant/api/', 'org.apache.ant.', 'org.apache.tools.ant.'
+    link 'https://junit.org/junit4/javadoc/latest/', 'org.junit.', 'junit.'
+    link 'https://junit.org/junit5/docs/current/api/', 'org.junit.jupiter.', 'org.junit.platform.'
+    link 'https://www.antlr2.org/javadoc/', 'antlr.'
+    link 'https://www.antlr.org/api/Java/', 'org.antlr.v4.'
+    link 'https://commons.apache.org/proper/commons-cli/javadocs/api-release/', 'org.apache.commons.cli.'
+    link 'https://picocli.info/apidocs/', 'picocli.'
 }
 
 def groovydocSpec = groovydocBaseSpec >> {
@@ -74,6 +75,10 @@ def groovydocSpec = groovydocBaseSpec >> {
 allprojects {
     javadoc javadocSpec
     groovydoc groovydocSpec
+}
+
+javadoc {
+    exclude '**/GroovyRecognizer.java' // generated file
 }
 
 evaluationDependsOn('groovy-jaxb')
@@ -88,6 +93,7 @@ javadocAll {
         source += sp.javadoc.source
         classpath += sp.javadoc.classpath
     }
+    exclude '**/GroovyRecognizer.java' // generated file
 }
 javadocAll javadocSpec
 
@@ -139,9 +145,9 @@ task docGDK {
                     arg(value: '-title')
                     arg(value: 'Groovy JDK enhancements')
                     arg(value: '-link')
-                    arg(value: 'groovy,org.codehaus.groovy=http://docs.groovy-lang.org/latest/html/gapi/')
+                    arg(value: 'groovy,org.codehaus.groovy=https://docs.groovy-lang.org/latest/html/gapi/')
                     arg(value: '-link')
-                    arg(value: 'java,org.xml,javax,org.w3c=http://docs.oracle.com/javase/8/docs/api/')
+                    arg(value: 'java,org.xml,javax,org.w3c=https://docs.oracle.com/javase/8/docs/api/')
                     // either package name if in core or fully qualified path otherwise
                     arg(value: 'org.codehaus.groovy.runtime.DefaultGroovyMethods')
                     arg(value: 'org.codehaus.groovy.runtime.DefaultGroovyStaticMethods')

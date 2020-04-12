@@ -49,9 +49,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-/**
- * @author Alex.Tkachman
- */
 public class CachedClass {
     private static final Method[] EMPTY_METHOD_ARRAY = new Method[0];
     private final Class cachedClass;
@@ -430,7 +427,9 @@ public class CachedClass {
           if (metaClass.getClass() == MetaClassImpl.class) {
               classInfo.setStrongMetaClass(null);
               updateSetNewMopMethods(arr);
-              classInfo.setStrongMetaClass(new MetaClassImpl(metaClass.getTheClass()));
+              MetaClassImpl mci = new MetaClassImpl(metaClass.getTheClass());
+              mci.initialize();
+              classInfo.setStrongMetaClass(mci);
               return;
           }
 

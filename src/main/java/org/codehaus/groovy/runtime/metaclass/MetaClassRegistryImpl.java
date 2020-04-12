@@ -43,6 +43,7 @@ import org.codehaus.groovy.vmplugin.VMPluginFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,7 +54,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * A registry of MetaClass instances which caches introspection &
+ * A registry of MetaClass instances which caches introspection and
  * reflection information and allows methods to be dynamically added to
  * existing classes at runtime
  */
@@ -254,7 +255,7 @@ public class MetaClassRegistryImpl implements MetaClassRegistry{
 
     private void createMetaMethodFromClass(Map<CachedClass, List<MetaMethod>> map, Class aClass) {
         try {
-            MetaMethod method = (MetaMethod) aClass.newInstance();
+            MetaMethod method = (MetaMethod) aClass.getDeclaredConstructor().newInstance();
             final CachedClass declClass = method.getDeclaringClass();
             List<MetaMethod> arr = map.get(declClass);
             if (arr == null) {
@@ -263,7 +264,7 @@ public class MetaClassRegistryImpl implements MetaClassRegistry{
             }
             arr.add(method);
             instanceMethods.add(method);
-        } catch (InstantiationException | IllegalAccessException e) { /* ignore */
+        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) { /* ignore */
         }
     }
 

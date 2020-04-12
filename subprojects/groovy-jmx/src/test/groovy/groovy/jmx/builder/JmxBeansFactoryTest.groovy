@@ -18,10 +18,6 @@
  */
 package groovy.jmx.builder
 
-/**
- *
- * @author vladimir
- */
 class JmxBeansFactoryTest extends GroovyTestCase {
     def builder
 
@@ -37,7 +33,7 @@ class JmxBeansFactoryTest extends GroovyTestCase {
         def maps = builder.beans(obj1, obj2)
 
         assert maps
-        assert maps.size == 2
+        assert maps.size() == 2
 
         // test MockManagedObject map
         def map = maps[0]

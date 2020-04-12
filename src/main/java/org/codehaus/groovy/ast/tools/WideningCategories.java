@@ -67,9 +67,6 @@ import static org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
  * the number 1 being int, since the 1 is an int. The 2l is a long, therefore the
  * int category will not apply and the result type can't be int. The next category
  * in the list is long, and since both apply to long, the result type is a long.
- *
- * @author <a href="mailto:blackdrag@gmx.org">Jochen "blackdrag" Theodorou</a>
- * @author Cedric Champeau
  */
 public class WideningCategories {
 
@@ -586,7 +583,7 @@ public class WideningCategories {
     /**
      * This {@link ClassNode} specialization is used when the lowest upper bound of two types
      * cannot be represented by an existing type. For example, if B extends A,  C extends A
-     * and both C & B implement a common interface not implemented by A, then we use this class
+     * and both C and B implement a common interface not implemented by A, then we use this class
      * to represent the bound.
      *
      * At compile time, some classes like {@link org.codehaus.groovy.classgen.AsmClassGenerator} need

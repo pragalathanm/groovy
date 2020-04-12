@@ -2607,4 +2607,110 @@ assert c.b() == 2
         '''
     }
 
+    //GROOVY-8880
+    void testTraitWithInitBlock() {
+        assertScript '''
+            trait MyTrait {
+                final String first = 'FOO'
+                final String last = 'BAR'
+                String full
+
+                {
+                    full = "$first$last"
+                }
+            }
+
+            class MyClass implements MyTrait { }
+
+            def mc = new MyClass()
+            assert mc.full == 'FOOBAR'
+        '''
+    }
+
+    //GROOVY-8880
+    void testTraitWithStaticInitBlock() {
+        assertScript '''
+            trait MyTrait {
+                static final String first = 'FOO'
+                static final String last = 'BAR'
+                static String full
+                static {
+                    full = "$first$last"
+                }
+            }
+
+            class MyClass implements MyTrait { }
+
+            assert MyClass.full == 'FOOBAR'
+        '''
+    }
+
+    //GROOVY-8892
+    void testTraitWithStaticInitBlockWithAndWithoutProps() {
+        assertScript '''
+            class Counter {
+                static int count = 0
+            }
+            trait TraitNoProps {
+                {
+                    Counter.count += 1
+                }
+            }
+            trait TraitWithProp {
+                Integer instanceCounter //immutable, non-shareable
+                {
+                    Counter.count += 10
+                    instanceCounter = 1
+                }
+            }
+            class ClassWithTraits implements TraitNoProps, TraitWithProp { }
+            assert new ClassWithTraits().instanceCounter == 1
+            assert Counter.count == 11
+        '''
+    }
+
+    //GROOVY-8954
+    void testTraitWithPropertyAlsoFromInterfaceSC() {
+        assertScript '''
+            interface DomainProp {
+                boolean isNullable()
+            }
+
+            abstract class OrderedProp implements DomainProp { }
+
+            trait Nullable {
+                boolean nullable = true
+            }
+
+            @groovy.transform.CompileStatic
+            abstract class CustomProp extends OrderedProp implements Nullable { }
+
+            assert new CustomProp() {}
+        '''
+    }
+
+    //GROOVY-8272
+    void testTraitAccessToInheritedStaticMethods() {
+        assertScript '''
+            import groovy.transform.CompileStatic
+
+            @CompileStatic
+            trait Foo {
+                static String go() {
+                    'Go!'
+                }
+            }
+
+            @CompileStatic
+            trait Bar extends Foo {
+                String doIt() {
+                    go().toUpperCase()
+                }
+            }
+
+            class Main implements Bar {}
+
+            assert new Main().doIt() == 'GO!'
+        '''
+    }
 }

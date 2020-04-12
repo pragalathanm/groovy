@@ -22,12 +22,12 @@ buildscript {
     repositories {
         if (rootProject.hasProperty('buildInChina')) {
             // Try to use Aliyun maven repository when building in China
-            maven { url 'http://maven.aliyun.com/nexus/content/groups/public' }
+            maven { url 'https://maven.aliyun.com/nexus/content/groups/public' }
         }
         jcenter()
         maven{
             name 'Bintray Javadoc Hotfix repo'
-            url 'http://dl.bintray.com/melix/gradle-javadoc-hotfix-plugin'
+            url 'https://dl.bintray.com/melix/gradle-javadoc-hotfix-plugin'
         }
         maven {
             url "https://plugins.gradle.org/m2/"
@@ -40,7 +40,7 @@ buildscript {
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:3.0.3"
         classpath 'me.champeau.gradle:gradle-javadoc-hotfix-plugin:0.1'
         //classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'
-        classpath "gradle.plugin.org.nosphere.apache:creadur-rat-gradle:0.1.3"
+        classpath "org.nosphere.apache:creadur-rat-gradle:0.6.0"
         classpath "gradle.plugin.com.github.jk1:gradle-license-report:0.3.2"
         if (JavaVersion.current() >= JavaVersion.VERSION_1_8) {
             classpath "gradle.plugin.com.github.spotbugs:spotbugs-gradle-plugin:1.6.4"
@@ -66,7 +66,7 @@ buildScanRecipes {
 }
 
 ext.modules = {
-    subprojects.findAll{ !['performance', 'tests-vm8'].contains(it.name) }
+    subprojects.findAll{ !['performance', 'tests-vm8', 'binary-compatibility'].contains(it.name) }
 }
 ext.isReleaseVersion = !groovyVersion.toLowerCase().endsWith("snapshot")
 
@@ -94,10 +94,10 @@ allprojects {
     repositories {
         if (rootProject.hasProperty('buildInChina')) {
             // Try to use Aliyun maven repository when building in China
-            maven { url 'http://maven.aliyun.com/nexus/content/groups/public' }
+            maven { url 'https://maven.aliyun.com/nexus/content/groups/public' }
         }
         jcenter()
-        maven { url 'http://dl.bintray.com/melix/thirdparty-apache' } // openbeans
+        maven { url 'https://dl.bintray.com/melix/thirdparty-apache' } // openbeans
     }
 
     ext.buildDate = isReleaseVersion?new Date():new Date(0)
@@ -130,8 +130,7 @@ test.dependsOn(copyTestResources)
 
 repositories {
     // todo Some repos are needed only for some configs. Declare them just for the configuration once Gradle allows this.
-    maven { url 'http://repository.jboss.org/nexus/content/groups/m2-release-proxy' } // tools
-    maven { url 'http://repo.bodar.com' } // tools - jarjar
+    maven { url 'https://repository.jboss.org/nexus/content/groups/m2-release-proxy' } // tools
 }
 
 configurations {
@@ -143,7 +142,7 @@ configurations {
 
 ext {
     antVersion = '1.9.13'
-    asmVersion = '7.0-beta'
+    asmVersion = '7.3.1'
     antlrVersion = '2.7.7'
     bridgerVersion = '1.5.Final'
     coberturaVersion = '1.9.4.1'
@@ -151,20 +150,19 @@ ext {
     gparsVersion = '1.2.1'
     ivyVersion = '2.4.0'
     jansiVersion = '1.17.1'
-    jarjarVersion = '1.6.6'
+    jarjarVersion = '1.7.2'
     jlineVersion = '2.14.6'
     jmockVersion = '1.2.0'
     logbackVersion = '1.1.7'
     log4jVersion = '1.2.17'
     log4j2Version = '2.8'
     openbeansVersion = '1.0'
-    picocliVersion = '3.6.0'
+    picocliVersion = '4.0.1'
     qdoxVersion = '1.12.1'
     slf4jVersion = '1.7.25'
     xmlunitVersion = '1.6'
     xstreamVersion = '1.4.10'
     spockVersion = '1.2-groovy-2.5'
-    antlr4Version = '4.7'
     spotbugsannotationsVersion = '3.1.7'
 }
 
@@ -385,6 +383,7 @@ allprojects {
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
         options.incremental = true
+//        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
 
         if (classpath) {
             classpath = classpath + files(dgmConverter.outputDir)
@@ -405,6 +404,7 @@ allprojects {
     tasks.withType(GroovyCompile) {
         groovyOptions.fork(memoryMaximumSize: groovycMain_mx)
         groovyOptions.encoding = 'UTF-8'
+//        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
         groovyClasspath = files(
                 rootProject.compileJava.classpath,
                 files(project==rootProject?rootProject.bootstrapJar:rootProject.jar)

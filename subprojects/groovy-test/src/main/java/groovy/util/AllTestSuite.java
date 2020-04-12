@@ -45,10 +45,6 @@ import java.util.logging.Logger;
  * When setting the log level of this class to FINEST, all file loading will be logged.
  * <p>
  * See also groovy.util.AllTestSuiteTest.groovy
- *
- * @author Andrew Glover
- * @author Dierk Koenig
- * @author Paul King
  */
 public class AllTestSuite extends TestSuite {
 
@@ -96,8 +92,7 @@ public class AllTestSuite extends TestSuite {
     static { // this is only needed since the Groovy Build compiles *.groovy files after *.java files
         try {
             // TODO: dk: make FileNameFinder injectable
-            Class finderClass = Class.forName("groovy.util.FileNameFinder");
-            finder = (IFileNameFinder) finderClass.newInstance();
+            finder = (IFileNameFinder) Class.forName("groovy.util.FileNameFinder").getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             throw new RuntimeException("Cannot find and instantiate class FileNameFinder", e);
         }

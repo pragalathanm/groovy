@@ -41,6 +41,7 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.runtime.EncodingGroovyMethods;
 import org.codehaus.groovy.runtime.IOGroovyMethods;
 import org.codehaus.groovy.runtime.InvokerHelper;
 import org.codehaus.groovy.runtime.memoize.ConcurrentCommonCache;
@@ -66,6 +67,7 @@ import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.security.AccessController;
 import java.security.CodeSource;
+import java.security.NoSuchAlgorithmException;
 import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.Permissions;
@@ -223,6 +225,17 @@ public class GroovyClassLoader extends URLClassLoader {
     }
 
     /**
+     * Check if this class loader has compatible {@link CompilerConfiguration}
+     * with the provided one.
+     * @param config the compiler configuration to test for compatibility
+     * @return {@code true} if the provided config is exactly the same instance
+     * of {@link CompilerConfiguration} as this loader has
+     */
+    public boolean hasCompatibleConfiguration(CompilerConfiguration config) {
+      return this.config == config;
+    }
+
+    /**
      * Parses the given file into a Java class capable of being run
      *
      * @param file the file name to parse
@@ -278,7 +291,7 @@ public class GroovyClassLoader extends URLClassLoader {
         });
         return parseClass(gcs);
     }
-    
+
     /**
      * @deprecated Prefer using methods taking a Reader rather than an InputStream to avoid wrong encoding issues.
      * Use {@link #parseClass(Reader, String) parseClass} instead
@@ -315,8 +328,13 @@ public class GroovyClassLoader extends URLClassLoader {
      * @return the main class defined in the given script
      */
     public Class parseClass(final GroovyCodeSource codeSource, boolean shouldCacheSource) throws CompilationFailedException {
+        // it's better to cache class instances by the source code
+        // GCL will load the unique class instance for the same source code
+        // and avoid occupying Permanent Area/Metaspace repeatedly
+        String cacheKey = genSourceCacheKey(codeSource);
+
         return ((ConcurrentCommonCache<String, Class>) sourceCache).getAndPut(
-                codeSource.getName(),
+                cacheKey,
                 new EvictableCache.ValueProvider<String, Class>() {
                     @Override
                     public Class provide(String key) {
@@ -326,6 +344,35 @@ public class GroovyClassLoader extends URLClassLoader {
                 shouldCacheSource
         );
     }
+
+    private String genSourceCacheKey(GroovyCodeSource codeSource) {
+        StringBuilder strToDigest;
+
+        String scriptText = codeSource.getScriptText();
+        if (null != scriptText) {
+            strToDigest = new StringBuilder((int) (scriptText.length() * 1.2));
+            strToDigest.append("scriptText:").append(scriptText);
+
+            CodeSource cs = codeSource.getCodeSource();
+            if (null != cs) {
+                strToDigest.append("/codeSource:").append(cs);
+            }
+        } else {
+            strToDigest = new StringBuilder(32);
+            // if the script text is null, i.e. the script content is invalid
+            // use the name as cache key for the time being to trigger the validation by `groovy.lang.GroovyClassLoader.validate`
+            // note: the script will not be cached due to the invalid script content,
+            //       so it does not matter even if cache key is not the md5 value of script content
+            strToDigest.append("name:").append(codeSource.getName());
+        }
+
+        try {
+            return EncodingGroovyMethods.md5(strToDigest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new GroovyRuntimeException(e); // should never reach here!
+        }
+    }
+
 
     private Class doParseClass(GroovyCodeSource codeSource) {
         validate(codeSource);
@@ -886,7 +933,7 @@ public class GroovyClassLoader extends URLClassLoader {
     private static File fileReallyExists(URL ret, String fileWithoutPackage) {
         File path;
         try {
-            /* fix for GROOVY-5809 */ 
+            /* fix for GROOVY-5809 */
             path = new File(ret.toURI());
         } catch(URISyntaxException e) {
             path = new File(decodeFileName(ret.getFile()));

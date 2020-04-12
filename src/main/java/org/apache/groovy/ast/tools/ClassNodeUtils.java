@@ -22,6 +22,7 @@ import groovy.transform.Generated;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -35,9 +36,11 @@ import org.codehaus.groovy.transform.AbstractASTTransformation;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.hasAnnotation;
 import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.markAsGenerated;
@@ -75,7 +78,7 @@ public class ClassNodeUtils {
     }
 
     /**
-     * Add a method that is marked as @Generated.
+     * Return an existing method if one exists or else create a new method and mark it as {@code @Generated}.
      *
      * @see ClassNode#addMethod(String, int, ClassNode, Parameter[], ClassNode[], Statement)
      */
@@ -85,13 +88,15 @@ public class ClassNodeUtils {
                                 Parameter[] parameters,
                                 ClassNode[] exceptions,
                                 Statement code) {
-        MethodNode result = cNode.addMethod(name, modifiers, returnType, parameters, exceptions, code);
-        markAsGenerated(cNode, result);
+        MethodNode existing = cNode.getDeclaredMethod(name, parameters);
+        if (existing != null) return existing;
+        MethodNode result = new MethodNode(name, modifiers, returnType, parameters, exceptions, code);
+        addGeneratedMethod(cNode, result);
         return result;
     }
 
     /**
-     * Add a method that is marked as @Generated.
+     * Add a method and mark it as {@code @Generated}.
      *
      * @see ClassNode#addMethod(MethodNode)
      */
@@ -101,7 +106,17 @@ public class ClassNodeUtils {
     }
 
     /**
-     * Add a method that is marked as @Generated.
+     * Add an inner class that is marked as {@code @Generated}.
+     *
+     * @see org.codehaus.groovy.ast.ModuleNode#addClass(ClassNode)
+     */
+    public static void addGeneratedInnerClass(ClassNode cNode, ClassNode inner) {
+        cNode.getModule().addClass(inner);
+        markAsGenerated(cNode, inner);
+    }
+
+    /**
+     * Add a method that is marked as {@code @Generated}.
      *
      * @see ClassNode#addConstructor(int, Parameter[], ClassNode[], Statement)
      */
@@ -112,7 +127,7 @@ public class ClassNodeUtils {
     }
 
     /**
-     * Add a method that is marked as @Generated.
+     * Add a method that is marked as {@code @Generated}.
      *
      * @see ClassNode#addConstructor(ConstructorNode)
      */
@@ -136,39 +151,37 @@ public class ClassNodeUtils {
     }
 
     /**
-     * Add in methods from all interfaces. Existing entries in the methods map take precedence.
-     * Methods from interfaces visited early take precedence over later ones.
+     * Adds methods from all interfaces. Existing entries in the methods map
+     * take precedence. Methods from interfaces visited early take precedence
+     * over later ones.
      *
      * @param cNode The ClassNode
      * @param methodsMap A map of existing methods to alter
      */
     public static void addDeclaredMethodsFromInterfaces(ClassNode cNode, Map<String, MethodNode> methodsMap) {
-        // add in unimplemented abstract methods from the interfaces
         for (ClassNode iface : cNode.getInterfaces()) {
-            Map<String, MethodNode> ifaceMethodsMap = iface.getDeclaredMethodsMap();
-            for (Map.Entry<String, MethodNode> entry : ifaceMethodsMap.entrySet()) {
-                String methSig = entry.getKey();
-                if (!methodsMap.containsKey(methSig)) {
-                    methodsMap.put(methSig, entry.getValue());
+            Map<String, MethodNode> declaredMethods = iface.getDeclaredMethodsMap();
+            for (Map.Entry<String, MethodNode> entry : declaredMethods.entrySet()) {
+                if (entry.getValue().getDeclaringClass().isInterface()) {
+                    if (null == methodsMap.get(entry.getKey())) {
+                        methodsMap.put(entry.getKey(), entry.getValue());
+                    }
                 }
             }
         }
     }
 
     /**
-     * Get methods from all interfaces.
-     * Methods from interfaces visited early will be overwritten by later ones.
+     * Gets methods from all interfaces. Methods from interfaces visited early
+     * take precedence over later ones.
      *
      * @param cNode The ClassNode
      * @return A map of methods
      */
     public static Map<String, MethodNode> getDeclaredMethodsFromInterfaces(ClassNode cNode) {
-        Map<String, MethodNode> result = new HashMap<String, MethodNode>();
-        ClassNode[] interfaces = cNode.getInterfaces();
-        for (ClassNode iface : interfaces) {
-            result.putAll(iface.getDeclaredMethodsMap());
-        }
-        return result;
+        Map<String, MethodNode> methodsMap = new HashMap<>();
+        addDeclaredMethodsFromInterfaces(cNode, methodsMap);
+        return methodsMap;
     }
 
     /**
@@ -287,7 +300,7 @@ public class ClassNodeUtils {
         if (accessorName.startsWith("get") || accessorName.startsWith("is") || accessorName.startsWith("set")) {
             int prefixLength = accessorName.startsWith("is") ? 2 : 3;
             return accessorName.length() > prefixLength;
-        };
+        }
         return false;
     }
 
@@ -373,4 +386,28 @@ public class ClassNodeUtils {
         return Objects.equals(first.getPackageName(), second.getPackageName());
     }
 
+    /**
+     * Return the (potentially inherited) field of the classnode.
+     *
+     * @param classNode the classnode
+     * @param fieldName the name of the field
+     * @return the field or null if not found
+     */
+    public static FieldNode getField(ClassNode classNode, String fieldName) {
+        ClassNode node = classNode;
+        Set<String> visited = new HashSet<String>();
+        while (node != null) {
+            FieldNode fn = node.getDeclaredField(fieldName);
+            if (fn != null) return fn;
+            ClassNode[] interfaces = node.getInterfaces();
+            for (ClassNode iNode : interfaces) {
+                if (visited.contains(iNode.getName())) continue;
+                FieldNode ifn = getField(iNode, fieldName);
+                visited.add(iNode.getName());
+                if (ifn != null) return ifn;
+            }
+            node = node.getSuperClass();
+        }
+        return null;
+    }
 }

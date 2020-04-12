@@ -22,13 +22,22 @@ ext.artifactoryUser = project.hasProperty('artifactoryUser') ? project.artifacto
 ext.artifactoryPassword = project.hasProperty('artifactoryPassword') ? project.artifactoryPassword : System.getenv('ARTIFACTORY_PASSWORD')
 
 if (!artifactoryUser) {
-    // try to read from properties
-    def artifactoryFile = file('artifactory.properties')
+    // try to read artifactory.properties
+    def base = file(projectDir)
+    def artifactoryFile = new File(base, 'artifactory.properties')
+    while (!artifactoryFile.exists()) {
+        base = base.parentFile
+        if (!base) break
+        artifactoryFile = new File(base, 'artifactory.properties')
+    }
     if (artifactoryFile.exists()) {
+        logger.lifecycle 'Found artifactory.properties in ' + base.path
         def props = new Properties()
         props.load(artifactoryFile.newReader())
         ext.artifactoryUser = props.getProperty('artifactoryUser','')
         ext.artifactoryPassword = props.getProperty('artifactoryPassword','')
+    } else {
+        logger.lifecycle 'No artifactory.properties file found'
     }
 }
 
@@ -69,6 +78,7 @@ allprojects {
 //                        'org/codehaus/groovy/groovy-testng/**',
 //                        'org/codehaus/groovy/groovy-xml/**',
                         'org/codehaus/groovy/groovy/*/groovy-all-*',
+                        'org/codehaus/groovy/groovy/*/groovy-bom-*',
                         'org/codehaus/groovy/groovy/*/groovy-backports-*',
                         'org/codehaus/groovy/groovy/*/groovy-binary-*'
                 ].join(',')
@@ -110,9 +120,11 @@ artifactoryPublish {
             }
         }
         deployDetails.add(makeTransformedPomDetails(name: 'groovy-all'))
+        deployDetails.add(makeTransformedPomDetails(name: 'groovy-bom'))
 
         if (isReleaseVersion) {
             deployDetails.add(makeTransformedPomSigDetails(name: 'groovy-all'))
+            deployDetails.add(makeTransformedPomSigDetails(name: 'groovy-bom'))
             allprojects {
                 if (project == rootProject || rootProject.ext.modules().contains(project)) {
                     configurations.archives.artifacts.findAll {
@@ -128,4 +140,4 @@ artifactoryPublish {
     }
 }
 
-artifactoryPublish.dependsOn('backportJars')
+artifactoryPublish.dependsOn(['backportJars', 'install'])

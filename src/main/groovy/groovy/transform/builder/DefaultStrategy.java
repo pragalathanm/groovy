@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedInnerClass;
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.assignX;
@@ -43,6 +45,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.declS;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
@@ -184,9 +187,9 @@ public class DefaultStrategy extends BuilderASTTransformation.AbstractBuilderStr
         createBuilderFactoryMethod(anno, buildee, builder);
         for (Parameter parameter : mNode.getParameters()) {
             builder.addField(createFieldCopy(buildee, parameter));
-            builder.addMethod(createBuilderMethodForProp(builder, new PropertyInfo(parameter.getName(), parameter.getType()), getPrefix(anno)));
+            addGeneratedMethod(builder, createBuilderMethodForProp(builder, new PropertyInfo(parameter.getName(), parameter.getType()), getPrefix(anno)));
         }
-        builder.addMethod(createBuildMethodForMethod(anno, buildee, mNode, mNode.getParameters()));
+        addGeneratedMethod(builder, createBuildMethodForMethod(anno, buildee, mNode, mNode.getParameters()));
     }
 
     public void buildClass(BuilderASTTransformation transform, ClassNode buildee, AnnotationNode anno) {
@@ -205,20 +208,20 @@ public class DefaultStrategy extends BuilderASTTransformation.AbstractBuilderStr
             ClassNode correctedType = getCorrectedType(buildee, pi.getType(), builder);
             String fieldName = pi.getName();
             builder.addField(createFieldCopy(buildee, fieldName, correctedType));
-            builder.addMethod(createBuilderMethodForProp(builder, new PropertyInfo(fieldName, correctedType), getPrefix(anno)));
+            addGeneratedMethod(builder, createBuilderMethodForProp(builder, new PropertyInfo(fieldName, correctedType), getPrefix(anno)));
         }
-        builder.addMethod(createBuildMethod(anno, buildee, props));
+        addGeneratedMethod(builder, createBuildMethod(anno, buildee, props));
     }
 
     private static ClassNode getCorrectedType(ClassNode buildee, ClassNode fieldType, ClassNode declaringClass) {
-        Map<String,ClassNode> genericsSpec = createGenericsSpec(declaringClass);
+        Map<String, ClassNode> genericsSpec = createGenericsSpec(declaringClass);
         extractSuperClassGenerics(fieldType, buildee, genericsSpec);
         return correctToGenericsSpecRecurse(genericsSpec, fieldType);
     }
 
     private static void createBuilderFactoryMethod(AnnotationNode anno, ClassNode buildee, ClassNode builder) {
-        buildee.getModule().addClass(builder);
-        buildee.addMethod(createBuilderMethod(anno, builder));
+        addGeneratedInnerClass(buildee, builder);
+        addGeneratedMethod(buildee, createBuilderMethod(anno, builder));
     }
 
     private static ClassNode createBuilder(AnnotationNode anno, ClassNode buildee) {
@@ -273,7 +276,7 @@ public class DefaultStrategy extends BuilderASTTransformation.AbstractBuilderStr
     }
 
     private static FieldNode createFieldCopy(ClassNode buildee, Parameter param) {
-        Map<String,ClassNode> genericsSpec = createGenericsSpec(buildee);
+        Map<String, ClassNode> genericsSpec = createGenericsSpec(buildee);
         extractSuperClassGenerics(param.getType(), buildee, genericsSpec);
         ClassNode correctedParamType = correctToGenericsSpecRecurse(genericsSpec, param.getType());
         return new FieldNode(param.getName(), ACC_PRIVATE, correctedParamType, buildee, param.getInitialExpression());
@@ -284,7 +287,7 @@ public class DefaultStrategy extends BuilderASTTransformation.AbstractBuilderStr
     }
 
     private static Expression initializeInstance(ClassNode buildee, List<PropertyInfo> props, BlockStatement body) {
-        Expression instance = varX("_the" + buildee.getNameWithoutPackage(), buildee);
+        Expression instance = localVarX("_the" + buildee.getNameWithoutPackage(), buildee);
         body.addStatement(declS(instance, ctorX(buildee)));
         for (PropertyInfo pi : props) {
             body.addStatement(stmt(assignX(propX(instance, pi.getName()), varX(pi.getName(), pi.getType()))));

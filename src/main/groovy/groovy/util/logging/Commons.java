@@ -38,6 +38,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Locale;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
+
 /**
  * This local transform adds a logging ability to your program using
  * Apache Commons logging. Every method call on a unbound variable named <i>log</i>
@@ -56,8 +58,6 @@ import java.util.Locale;
  * If the expression exp is a constant or only a variable access the method call will
  * not be transformed. But this will still cause a call on the injected logger.
  *
- * @author Hamlet D'Arcy
- * @author Matthias Cullmann
  * @since 1.8.0
  */
 @java.lang.annotation.Documented
@@ -69,7 +69,7 @@ public @interface Commons {
     String category() default LogASTTransformation.DEFAULT_CATEGORY_NAME;
     Class<? extends LogASTTransformation.LoggingStrategy> loggingStrategy() default CommonsLoggingStrategy.class;
 
-    public  static class CommonsLoggingStrategy extends LogASTTransformation.AbstractLoggingStrategy {
+    public static class CommonsLoggingStrategy extends LogASTTransformation.AbstractLoggingStrategy {
 
         private static final String LOGGER_NAME = "org.apache.commons.logging.Log";
         private static final String LOGGERFACTORY_NAME = "org.apache.commons.logging.LogFactory";
@@ -88,10 +88,12 @@ public @interface Commons {
                             new ConstantExpression(getCategoryName(classNode, categoryName))));
         }
 
+        @Override
         public boolean isLoggingMethod(String methodName) {
             return methodName.matches("fatal|error|warn|info|debug|trace");
         }
 
+        @Override
         public Expression wrapLoggingMethodCall(Expression logVariable, String methodName, Expression originalExpression) {
             MethodCallExpression condition = new MethodCallExpression(
                     logVariable,
@@ -102,7 +104,7 @@ public @interface Commons {
             return new TernaryExpression(
                     new BooleanExpression(condition),
                     originalExpression,
-                    ConstantExpression.NULL);
+                    nullX());
         }
    }
 }

@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.transform;
 
+import junit.framework.AssertionFailedError;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -47,17 +48,12 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.throwS;
  * Handles generation of code for the {@code @NotYetImplemented} annotation.
  * 
  * @see groovy.transform.NotYetImplemented
- *
- * @author Dierk König
- * @author Andre Steingress
- * @author Ilinca V. Hallberg
- * @author Björn Westlin
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 public class NotYetImplementedASTTransformation extends AbstractASTTransformation {
 
     private static final ClassNode CATCHED_THROWABLE_TYPE = ClassHelper.make(Throwable.class);
-    private static final ClassNode ASSERTION_FAILED_ERROR_TYPE = ClassHelper.make("junit.framework.AssertionFailedError");
+    private static final ClassNode ASSERTION_FAILED_ERROR_TYPE = ClassHelper.make(AssertionFailedError.class);
 
     public void visit(ASTNode[] nodes, SourceUnit source) {
         if (nodes.length != 2 || !(nodes[0] instanceof AnnotationNode) || !(nodes[1] instanceof AnnotatedNode)) {

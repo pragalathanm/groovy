@@ -91,10 +91,8 @@ import java.lang.annotation.Target;
  *
  * def words = ["The", "quick", "brown", "fox"]
  * println new Sentence(words).shuffle()
- * // => [quick, fox, The, brown]       (order will vary)
+ * // {@code =>} [quick, fox, The, brown]       (order will vary)
  * </pre>
- *
- * @author Alex Tkachman
  */
 @java.lang.annotation.Documented
 @Retention(RetentionPolicy.SOURCE)

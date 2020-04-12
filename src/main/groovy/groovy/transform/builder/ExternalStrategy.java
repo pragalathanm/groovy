@@ -31,11 +31,13 @@ import org.codehaus.groovy.transform.BuilderASTTransformation;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apache.groovy.ast.tools.ClassNodeUtils.addGeneratedMethod;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.assignX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.block;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.declS;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.localVarX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
@@ -120,9 +122,9 @@ public class ExternalStrategy extends BuilderASTTransformation.AbstractBuilderSt
         }
         for (PropertyInfo prop : props) {
             builder.addField(createFieldCopy(builder, prop));
-            builder.addMethod(createBuilderMethodForField(builder, prop, prefix));
+            addGeneratedMethod(builder, createBuilderMethodForField(builder, prop, prefix));
         }
-        builder.addMethod(createBuildMethod(transform, anno, buildee, props));
+        addGeneratedMethod(builder, createBuildMethod(transform, anno, buildee, props));
     }
 
     private static MethodNode createBuildMethod(BuilderASTTransformation transform, AnnotationNode anno, ClassNode sourceClass, List<PropertyInfo> fields) {
@@ -148,7 +150,7 @@ public class ExternalStrategy extends BuilderASTTransformation.AbstractBuilderSt
     }
 
     private static Expression initializeInstance(ClassNode sourceClass, List<PropertyInfo> props, BlockStatement body) {
-        Expression instance = varX("_the" + sourceClass.getNameWithoutPackage(), sourceClass);
+        Expression instance = localVarX("_the" + sourceClass.getNameWithoutPackage(), sourceClass);
         body.addStatement(declS(instance, ctorX(sourceClass)));
         for (PropertyInfo prop : props) {
             body.addStatement(stmt(assignX(propX(instance, prop.getName()), varX(prop.getName().equals("class") ? "clazz" : prop.getName(), newClass(prop.getType())))));

@@ -26,7 +26,6 @@ import groovy.lang.Range;
 import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.FromString;
 import groovy.transform.stc.PickFirstResolver;
-import groovy.transform.stc.SimpleType;
 import org.apache.groovy.io.StringBuilderWriter;
 import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 import org.codehaus.groovy.util.CharSequenceReader;
@@ -252,7 +251,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self The CharSequence to capitalize
      * @return A String containing the capitalized toString() of the CharSequence
-     * @see #capitalize(String)
      * @since 1.8.2
      */
     public static String capitalize(CharSequence self) {
@@ -287,7 +285,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self          a CharSequence object
      * @param numberOfChars the total minimum number of characters of the result
      * @return the centered toString() of this CharSequence with padded characters around it
-     * @see #center(String, Number)
      * @since 1.8.2
      */
     public static String center(CharSequence self, Number numberOfChars) {
@@ -313,7 +310,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param numberOfChars the total minimum number of characters of the resulting CharSequence
      * @param padding       the characters used for padding
      * @return the centered toString() of this CharSequence with padded characters around it
-     * @see #center(String, Number, String)
      * @since 1.8.2
      */
     public static String center(CharSequence self, Number numberOfChars, CharSequence padding) {
@@ -357,7 +353,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self a CharSequence
      * @param text the CharSequence to look for
      * @return true if this CharSequence contains the given text
-     * @see #contains(String, String)
      * @since 1.8.2
      */
     public static boolean contains(CharSequence self, CharSequence text) {
@@ -380,7 +375,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self a CharSequence
      * @param text a sub CharSequence
      * @return the number of occurrences of the given CharSequence inside this CharSequence
-     * @see #count(String, String)
      * @since 1.8.2
      */
     public static int count(CharSequence self, CharSequence text) {
@@ -410,7 +404,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence object
      * @return the denormalized toString() of this CharSequence
-     * @see #denormalize(String)
      * @since 1.8.2
      */
     public static String denormalize(final CharSequence self) {
@@ -467,7 +460,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
                     sb.append(ch);
                     break;
             }
-         }
+        }
 
         return sb.toString();
     }
@@ -514,11 +507,25 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param num the number of characters to drop from this GString
      * @return a String consisting of all characters except the first <code>num</code> ones,
      *         or else an empty String, if the toString() of this GString has less than <code>num</code> characters.
-     * @see #drop(CharSequence, int)
+     * @see #drop(String, int)
      * @since 2.3.7
      */
     public static String drop(GString self, int num) {
-        return drop(self.toString(), num).toString();
+        return drop(self.toString(), num);
+    }
+
+    /**
+     * A String variant of the equivalent CharSequence method.
+     *
+     * @param self the original String
+     * @param num the number of characters to drop from this String
+     * @return a String consisting of all characters except the first <code>num</code> ones,
+     *         or else an empty String, if the String has less than <code>num</code> characters.
+     * @see #drop(CharSequence, int)
+     * @since 2.5.5
+     */
+    public static String drop(String self, int num) {
+        return (String) drop((CharSequence) self, num);
     }
 
     /**
@@ -530,7 +537,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * def text = "Groovy"
      * assert text.dropWhile{ false } == 'Groovy'
      * assert text.dropWhile{ true } == ''
-     * assert text.dropWhile{ it < 'Z' } == 'roovy'
+     * assert text.dropWhile{ it {@code <} 'Z' } == 'roovy'
      * assert text.dropWhile{ it != 'v' } == 'vy'
      * </pre>
      *
@@ -638,7 +645,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param closure a closure
      * @return the last value returned by the closure
      * @throws java.io.IOException if an error occurs
-     * @see #eachLine(String, groovy.lang.Closure)
      * @since 1.8.2
      */
     public static <T> T eachLine(CharSequence self, @ClosureParams(value=FromString.class, options={"String","String,Integer"}) Closure<T> closure) throws IOException {
@@ -655,7 +661,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param closure a closure (arg 1 is line, optional arg 2 is line number)
      * @return the last value returned by the closure
      * @throws java.io.IOException if an error occurs
-     * @see #eachLine(String, int, groovy.lang.Closure)
      * @since 1.8.2
      */
     public static <T> T eachLine(CharSequence self, int firstLine, @ClosureParams(value=FromString.class, options={"String","String,Integer"}) Closure<T> closure) throws IOException {
@@ -695,9 +700,9 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * <pre class="groovyTestCase">
      * assert "Groovy".collectReplacements{ it == 'o' ? '_O_' : null } == 'Gr_O__O_vy'
      * assert "Groovy".collectReplacements{ it.equalsIgnoreCase('O') ? '_O_' : null } == 'Gr_O__O_vy'
-     * assert "Groovy".collectReplacements{ char c -> c == 'o' ? '_O_' : null } == 'Gr_O__O_vy'
-     * assert "Groovy".collectReplacements{ Character c -> c == 'o' ? '_O_' : null } == 'Gr_O__O_vy'
-     * assert "B&W".collectReplacements{ it == '&' ? '&amp;' : null } == 'B&amp;W'
+     * assert "Groovy".collectReplacements{ char c {@code ->} c == 'o' ? '_O_' : null } == 'Gr_O__O_vy'
+     * assert "Groovy".collectReplacements{ Character c {@code ->} c == 'o' ? '_O_' : null } == 'Gr_O__O_vy'
+     * assert "B&amp;W".collectReplacements{ {@code it == '&' ? '&' : null} } == 'B&amp;W'
      * </pre>
      *
      * @param orig the original String
@@ -804,7 +809,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self A CharSequence to expand
      * @return The expanded toString() of this CharSequence
-     * @see #expand(String)
      * @since 1.8.2
      */
     public static String expand(CharSequence self) {
@@ -819,7 +823,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self A CharSequence to expand
      * @param tabStop The number of spaces a tab represents
      * @return The expanded toString() of this CharSequence
-     * @see #expand(String, int)
      * @since 1.8.2
      */
     public static String expand(CharSequence self, int tabStop) {
@@ -860,7 +863,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self A line to expand
      * @param tabStop The number of spaces a tab represents
      * @return The expanded toString() of this CharSequence
-     * @see #expandLine(String, int)
      * @since 1.8.2
      */
     public static String expandLine(CharSequence self, int tabStop) {
@@ -907,7 +909,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self  a CharSequence
      * @param regex the capturing regex
      * @return a String containing the matched portion, or null if the regex doesn't match
-     * @see #find(String, java.util.regex.Pattern)
+     * @see #find(CharSequence, java.util.regex.Pattern)
      * @since 1.8.2
      */
     public static String find(CharSequence self, CharSequence regex) {
@@ -922,10 +924,10 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param regex   the capturing regex CharSequence
      * @param closure the closure that will be passed the full match, plus each of the capturing groups (if any)
      * @return a String containing the result of calling the closure (calling toString() if needed), or null if the regex pattern doesn't match
-     * @see #find(String, java.util.regex.Pattern, groovy.lang.Closure)
+     * @see #find(CharSequence, java.util.regex.Pattern, groovy.lang.Closure)
      * @since 1.8.2
      */
-    public static String find(CharSequence self, CharSequence regex, @ClosureParams(value=SimpleType.class, options="java.lang.String[]") Closure closure) {
+    public static String find(CharSequence self, CharSequence regex, @ClosureParams(value=FromString.class, options={"java.util.List<java.lang.String>","java.lang.String[]"}) Closure closure) {
         return find(self, Pattern.compile(regex.toString()), closure);
     }
 
@@ -954,7 +956,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self    a CharSequence
      * @param pattern the compiled regex Pattern
      * @return a String containing the matched portion, or null if the regex pattern doesn't match
-     * @see #find(String, java.util.regex.Pattern)
      * @since 1.8.2
      */
     public static String find(CharSequence self, Pattern pattern) {
@@ -971,19 +972,19 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * <p>
      * For example, if the pattern doesn't match, the result is null:
      * <pre class="groovyTestCase">
-     *     assert "New York, NY".find(~/\d{5}/) { match -> return "-$match-"} == null
+     *     assert "New York, NY".find(~/\d{5}/) { match {@code ->} return "-$match-"} == null
      * </pre>
      *
      * If it does match and we don't have any capture groups in our regex, there is a single parameter
      * on the closure that the match gets passed to:
      * <pre class="groovyTestCase">
-     *      assert "New York, NY 10292-0098".find(~/\d{5}/) { match -> return "-$match-"} == "-10292-"
+     *      assert "New York, NY 10292-0098".find(~/\d{5}/) { match {@code ->} return "-$match-"} == "-10292-"
      * </pre>
      *
      * If we have capture groups in our expression, our closure has one parameter for the match, followed by
      * one for each of the capture groups:
      * <pre class="groovyTestCase">
-     *      assert "New York, NY 10292-0098".find(~/(\d{5})-?(\d{4})/) { match, zip, plusFour ->
+     *      assert "New York, NY 10292-0098".find(~/(\d{5})-?(\d{4})/) { match, zip, plusFour {@code ->}
      *          assert match == "10292-0098"
      *          assert zip == "10292"
      *          assert plusFour == "0098"
@@ -994,7 +995,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * the closure will be passed an array with the first element corresponding to the whole match,
      * followed by an element for each of the capture groups:
      * <pre class="groovyTestCase">
-     *      assert "New York, NY 10292-0098".find(~/(\d{5})-?(\d{4})/) { array ->
+     *      assert "New York, NY 10292-0098".find(~/(\d{5})-?(\d{4})/) { array {@code ->}
      *          assert array[0] == "10292-0098"
      *          assert array[1] == "10292"
      *          assert array[2] == "0098"
@@ -1004,7 +1005,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * If a capture group is optional, and doesn't match, then the corresponding value
      * for that capture group passed to the closure will be null as illustrated here:
      * <pre class="groovyTestCase">
-     *      assert "adsf 233-9999 adsf".find(~/(\d{3})?-?(\d{3})-(\d{4})/) { match, areaCode, exchange, stationNumber ->
+     *      assert "adsf 233-9999 adsf".find(~/(\d{3})?-?(\d{3})-(\d{4})/) { match, areaCode, exchange, stationNumber {@code ->}
      *          assert "233-9999" == match
      *          assert null == areaCode
      *          assert "233" == exchange
@@ -1017,10 +1018,9 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param pattern the compiled regex Pattern
      * @param closure the closure that will be passed the full match, plus each of the capturing groups (if any)
      * @return a String containing the result of calling the closure (calling toString() if needed), or null if the regex pattern doesn't match
-     * @see #find(String, java.util.regex.Pattern, groovy.lang.Closure)
      * @since 1.8.2
      */
-    public static String find(CharSequence self, Pattern pattern, @ClosureParams(value=SimpleType.class, options="java.lang.String[]") Closure closure) {
+    public static String find(CharSequence self, Pattern pattern, @ClosureParams(value=FromString.class, options={"java.util.List<java.lang.String>","java.lang.String[]"}) Closure closure) {
         Matcher matcher = pattern.matcher(self.toString());
         if (matcher.find()) {
             if (hasGroup(matcher)) {
@@ -1051,7 +1051,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @see #find(CharSequence, java.util.regex.Pattern, groovy.lang.Closure)
      */
     @Deprecated
-    public static String find(String self, Pattern pattern, @ClosureParams(value=SimpleType.class, options="java.lang.String[]") Closure closure) {
+    public static String find(String self, Pattern pattern, @ClosureParams(value=FromString.class, options={"java.util.List<java.lang.String>","java.lang.String[]"}) Closure closure) {
         return find((CharSequence) self, pattern, closure);
     }
 
@@ -1069,7 +1069,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @see #find(CharSequence, CharSequence, groovy.lang.Closure)
      */
     @Deprecated
-    public static String find(String self, String regex, @ClosureParams(value=SimpleType.class, options="java.lang.String[]") Closure closure) {
+    public static String find(String self, String regex, @ClosureParams(value=FromString.class, options={"java.util.List<java.lang.String>","java.lang.String[]"}) Closure closure) {
         return find((CharSequence) self, (CharSequence) regex, closure);
     }
 
@@ -1106,16 +1106,16 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * <p>
      * For example, if the regex doesn't match, it returns an empty list:
      * <pre class="groovyTestCase">
-     * assert "foo".findAll(/(\w*) Fish/) { match, firstWord -> return firstWord } == []
+     * assert "foo".findAll(/(\w*) Fish/) { match, firstWord {@code ->} return firstWord } == []
      * </pre>
      * Any regular expression matches are passed to the closure, if there are no capture groups, there will be one parameter for the match:
      * <pre class="groovyTestCase">
-     * assert "I could not, would not, with a fox.".findAll(/.ould/) { match -> "${match}n't"} == ["couldn't", "wouldn't"]
+     * assert "I could not, would not, with a fox.".findAll(/.ould/) { match {@code ->} "${match}n't"} == ["couldn't", "wouldn't"]
      * </pre>
      * If there are capture groups, the first parameter will be the match followed by one parameter for each capture group:
      * <pre class="groovyTestCase">
      * def orig = "There's a Wocket in my Pocket"
-     * assert orig.findAll(/(.)ocket/) { match, firstLetter -> "$firstLetter > $match" } == ["W > Wocket", "P > Pocket"]
+     * assert orig.findAll(/(.)ocket/) { match, firstLetter {@code ->} "$firstLetter {@code >} $match" } == ["W {@code >} Wocket", "P {@code >} Pocket"]
      * </pre>
      *
      * @param self    a CharSequence
@@ -1125,7 +1125,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @see #findAll(CharSequence, Pattern, groovy.lang.Closure)
      * @since 1.8.2
      */
-    public static <T> List<T> findAll(CharSequence self, CharSequence regex, @ClosureParams(value=SimpleType.class, options="java.lang.String[]") Closure<T> closure) {
+    public static <T> List<T> findAll(CharSequence self, CharSequence regex, @ClosureParams(value=FromString.class, options={"java.util.List<java.lang.String>","java.lang.String[]"}) Closure<T> closure) {
         return findAll(self, Pattern.compile(regex.toString()), closure);
     }
 
@@ -1145,7 +1145,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self    a CharSequence
      * @param pattern the compiled regex Pattern
      * @return a List containing all full matches of the Pattern within the CharSequence, an empty list will be returned if there are no matches
-     * @see #findAll(String, java.util.regex.Pattern)
      * @since 1.8.2
      */
     public static List<String> findAll(CharSequence self, Pattern pattern) {
@@ -1171,27 +1170,26 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * <p>
      * For example, if the pattern doesn't match, it returns an empty list:
      * <pre class="groovyTestCase">
-     * assert "foo".findAll(~/(\w*) Fish/) { match, firstWord -> return firstWord } == []
+     * assert "foo".findAll(~/(\w*) Fish/) { match, firstWord {@code ->} return firstWord } == []
      * </pre>
      * Any regular expression matches are passed to the closure, if there are no capture groups, there will be one
      * parameter for the match:
      * <pre class="groovyTestCase">
-     * assert "I could not, would not, with a fox.".findAll(~/.ould/) { match -> "${match}n't"} == ["couldn't", "wouldn't"]
+     * assert "I could not, would not, with a fox.".findAll(~/.ould/) { match {@code ->} "${match}n't"} == ["couldn't", "wouldn't"]
      * </pre>
      * If there are capture groups, the first parameter will be the match followed by one parameter for each capture group:
      * <pre class="groovyTestCase">
      * def orig = "There's a Wocket in my Pocket"
-     * assert orig.findAll(~/(.)ocket/) { match, firstLetter -> "$firstLetter > $match" } == ["W > Wocket", "P > Pocket"]
+     * assert orig.findAll(~/(.)ocket/) { match, firstLetter {@code ->} "$firstLetter {@code >} $match" } == ["W {@code >} Wocket", "P {@code >} Pocket"]
      * </pre>
      *
      * @param self    a CharSequence
      * @param pattern the compiled regex Pattern
      * @param closure will be passed the full match plus each of the capturing groups (if any)
      * @return a List containing all results from calling the closure with each full match (and potentially capturing groups) of the regex pattern within the CharSequence, an empty list will be returned if there are no matches
-     * @see #findAll(String, java.util.regex.Pattern, groovy.lang.Closure)
      * @since 1.8.2
      */
-    public static <T> List<T> findAll(CharSequence self, Pattern pattern, @ClosureParams(value=SimpleType.class, options="java.lang.String[]") Closure<T> closure) {
+    public static <T> List<T> findAll(CharSequence self, Pattern pattern, @ClosureParams(value=FromString.class, options={"java.util.List<java.lang.String>","java.lang.String[]"}) Closure<T> closure) {
         Matcher matcher = pattern.matcher(self.toString());
         return DefaultGroovyMethods.collect(matcher, closure);
     }
@@ -1210,7 +1208,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @see #findAll(CharSequence, java.util.regex.Pattern, groovy.lang.Closure)
      */
     @Deprecated
-    public static <T> List<T> findAll(String self, Pattern pattern, @ClosureParams(value=SimpleType.class, options="java.lang.String[]") Closure<T> closure) {
+    public static <T> List<T> findAll(String self, Pattern pattern, @ClosureParams(value=FromString.class, options={"java.util.List<java.lang.String>","java.lang.String[]"}) Closure<T> closure) {
         return findAll((CharSequence) self, pattern, closure);
     }
 
@@ -1228,7 +1226,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @see #findAll(CharSequence, CharSequence, groovy.lang.Closure)
      */
     @Deprecated
-    public static <T> List<T> findAll(String self, String regex, @ClosureParams(value=SimpleType.class, options="java.lang.String[]") Closure<T> closure) {
+    public static <T> List<T> findAll(String self, String regex, @ClosureParams(value=FromString.class, options={"java.util.List<java.lang.String>","java.lang.String[]"}) Closure<T> closure) {
         return findAll((CharSequence) self, (CharSequence) regex, closure);
     }
 
@@ -1537,7 +1535,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return an array of characters
-     * @see #getChars(String)
      * @since 1.8.2
      */
     public static char[] getChars(CharSequence self) {
@@ -1578,7 +1575,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
     }
 
     /**
-     * Get a replacement corresponding to the matched pattern for {@link org.codehaus.groovy.runtime.StringGroovyMethods#replaceAll(String, java.util.regex.Pattern, groovy.lang.Closure)}.
+     * Get a replacement corresponding to the matched pattern for {@link org.codehaus.groovy.runtime.StringGroovyMethods#replaceAll(CharSequence, java.util.regex.Pattern, groovy.lang.Closure)}.
      * The closure take parameter:
      * <ul>
      * <li>Whole of match if the pattern include no capturing group</li>
@@ -1602,7 +1599,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
         }
 
         if (closure.getParameterTypes().length == 1
-            && closure.getParameterTypes()[0] == Object[].class) {
+                && closure.getParameterTypes()[0] == Object[].class) {
             return InvokerHelper.toString(closure.call(groups.toArray()));
         }
         return InvokerHelper.toString(closure.call(groups));
@@ -1624,7 +1621,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self The CharSequence to check the characters in
      * @return true If all characters are whitespace characters
-     * @see #isAllWhitespace(String)
      * @since 1.8.2
      */
     public static boolean isAllWhitespace(CharSequence self) {
@@ -1649,7 +1645,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return true if the CharSequence can be parsed
-     * @see #isBigDecimal(String)
      * @since 1.8.2
      */
     public static boolean isBigDecimal(CharSequence self) {
@@ -1675,7 +1670,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return true if the CharSequence can be parsed
-     * @see #isBigInteger(String)
      * @since 1.8.2
      */
     public static boolean isBigInteger(CharSequence self) {
@@ -1774,7 +1768,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return true if the CharSequence can be parsed
-     * @see #isDouble(String)
      * @since 1.8.2
      */
     public static boolean isDouble(CharSequence self) {
@@ -1800,7 +1793,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return true if the CharSequence can be parsed
-     * @see #isFloat(String)
      * @since 1.8.2
      */
     public static boolean isFloat(CharSequence self) {
@@ -1826,7 +1818,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return true if the CharSequence can be parsed
-     * @see #isInteger(String)
      * @since 1.8.2
      */
     public static boolean isInteger(CharSequence self) {
@@ -1852,7 +1843,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return true if the CharSequence can be parsed
-     * @see #isLong(String)
      * @since 1.8.2
      */
     public static boolean isLong(CharSequence self) {
@@ -1935,14 +1925,14 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
                     // yes, so return the specified group as list
                     List<String> list = new ArrayList<String>(matcher.groupCount());
                     for (int i = 0; i <= matcher.groupCount(); i++) {
-                       list.add(matcher.group(i));
+                        list.add(matcher.group(i));
                     }
                     return list;
                 } else {
                     // not using groups, so return the nth
                     // occurrence of the pattern
                     return matcher.group();
-                 }
+                }
             }
 
             public void remove() {
@@ -2034,7 +2024,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self   a CharSequence
      * @param target an object representing the part to remove
      * @return a String containing the original minus the part to be removed
-     * @see #minus(String, Object)
      * @since 1.8.2
      */
     public static String minus(CharSequence self, Object target) {
@@ -2154,7 +2143,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence object
      * @return the normalized toString() for the CharSequence
-     * @see #normalize(String)
      * @since 1.8.2
      */
     public static String normalize(final CharSequence self) {
@@ -2254,7 +2242,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param numberOfChars the total minimum number of characters of the resulting CharSequence
      * @param padding       the characters used for padding
      * @return the CharSequence padded to the left as a String
-     * @see #padLeft(String, Number, String)
      * @since 1.8.2
      */
     public static String padLeft(CharSequence self, Number numberOfChars, CharSequence padding) {
@@ -2304,7 +2291,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self          a CharSequence object
      * @param numberOfChars the total minimum number of characters of the resulting string
      * @return the CharSequence padded to the right as a String
-     * @see #padRight(String, Number)
      * @since 1.8.2
      */
     public static String padRight(CharSequence self, Number numberOfChars) {
@@ -2426,7 +2412,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return a String with a decremented character at the end
-     * @see #previous(String)
      * @since 1.8.2
      */
     public static String previous(CharSequence self) {
@@ -2522,14 +2507,14 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * <pre class="groovyTestCase">
      *     assert "hello world".replaceAll("(o)") { it[0].toUpperCase() } == "hellO wOrld"
      *
-     *     assert "foobar-FooBar-".replaceAll("(([fF][oO]{2})[bB]ar)", { Object[] it -> it[0].toUpperCase() }) == "FOOBAR-FOOBAR-"
+     *     assert "foobar-FooBar-".replaceAll("(([fF][oO]{2})[bB]ar)", { Object[] it {@code ->} it[0].toUpperCase() }) == "FOOBAR-FOOBAR-"
      *
      *     // Here,
      *     //   it[0] is the global string of the matched group
      *     //   it[1] is the first string in the matched group
      *     //   it[2] is the second string in the matched group
      *
-     *     assert "foobar-FooBar-".replaceAll("(([fF][oO]{2})[bB]ar)", { x, y, z -> z.toUpperCase() }) == "FOO-FOO-"
+     *     assert "foobar-FooBar-".replaceAll("(([fF][oO]{2})[bB]ar)", { x, y, z {@code ->} z.toUpperCase() }) == "FOO-FOO-"
      *
      *     // Here,
      *     //   x is the global string of the matched group
@@ -2546,7 +2531,7 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @return the toString() of the CharSequence with content replaced
      * @throws java.util.regex.PatternSyntaxException if the regular expression's syntax is invalid
      * @since 1.8.2
-     * @see #replaceAll(String, java.util.regex.Pattern, groovy.lang.Closure)
+     * @see #replaceAll(CharSequence, java.util.regex.Pattern, groovy.lang.Closure)
      */
     public static String replaceAll(final CharSequence self, final CharSequence regex, @ClosureParams(value=FromString.class, options={"List<String>","String[]"}) final Closure closure) {
         return replaceAll(self, Pattern.compile(regex.toString()), closure);
@@ -2571,7 +2556,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param   pattern the regex Pattern to which the CharSequence of interest is to be matched
      * @param   replacement the CharSequence to be substituted for the first match
      * @return  The resulting <tt>String</tt>
-     * @see #replaceAll(String, java.util.regex.Pattern, String)
      * @since 1.8.2
      */
     public static String replaceAll(CharSequence self, Pattern pattern, CharSequence replacement) {
@@ -2592,14 +2576,14 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *     //   it[1] is the first string in the matched group
      *     //   it[2] is the second string in the matched group
      *
-     *     assert "foobar-FooBar-".replaceAll(~"(([fF][oO]{2})[bB]ar)", { Object[] it -> it[0].toUpperCase() }) == "FOOBAR-FOOBAR-"
+     *     assert "foobar-FooBar-".replaceAll(~"(([fF][oO]{2})[bB]ar)", { Object[] it {@code ->} it[0].toUpperCase() }) == "FOOBAR-FOOBAR-"
      *
      *     // Here,
      *     //   it[0] is the global string of the matched group
      *     //   it[1] is the first string in the matched group
      *     //   it[2] is the second string in the matched group
      *
-     *     assert "foobar-FooBar-".replaceAll("(([fF][oO]{2})[bB]ar)", { x, y, z -> z.toUpperCase() }) == "FOO-FOO-"
+     *     assert "foobar-FooBar-".replaceAll("(([fF][oO]{2})[bB]ar)", { x, y, z {@code ->} z.toUpperCase() }) == "FOO-FOO-"
      *
      *     // Here,
      *     //   x is the global string of the matched group
@@ -2693,7 +2677,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param closure the closure to apply on the first captured group
      * @return a CharSequence with replaced content
      * @throws java.util.regex.PatternSyntaxException if the regular expression's syntax is invalid
-     * @see #replaceFirst(String, String, groovy.lang.Closure)
      * @since 1.8.2
      */
     public static String replaceFirst(final CharSequence self, final CharSequence regex, @ClosureParams(value=FromString.class, options={"List<String>","String[]"}) final Closure closure) {
@@ -2719,7 +2702,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param   pattern the regex Pattern to which the CharSequence of interest is to be matched
      * @param   replacement the CharSequence to be substituted for the first match
      * @return  The resulting <tt>String</tt>
-     * @see #replaceFirst(String, java.util.regex.Pattern, String)
      * @since 1.8.2
      */
     public static String replaceFirst(CharSequence self, Pattern pattern, CharSequence replacement) {
@@ -2928,7 +2910,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return a new String with all the characters reversed.
-     * @see #reverse(String)
      * @since 1.8.2
      */
     public static String reverse(CharSequence self) {
@@ -3017,12 +2998,24 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
     }
 
     /**
+     * Compare a String representing a number to another.
+     * A fluent api style alias for {@code compareTo} on {@code BigDecimal}.
+     *
+     * @param left  a String representing a number
+     * @param right a String representing a number
+     * @return true if the value represented by left is equal to or bigger than the value represented by right
+     * @since 2.5.10
+     */
+    public static Boolean isAtLeast(String left, String right) {
+        return DefaultGroovyMethods.isAtLeast(new BigDecimal(left), right);
+    }
+
+    /**
      * Convenience method to split a CharSequence (with whitespace as delimiter).
      * Similar to tokenize, but returns an Array of String instead of a List.
      *
      * @param self the CharSequence to split
      * @return String[] result of split
-     * @see #split(String)
      * @since 1.8.2
      */
     public static String[] split(CharSequence self) {
@@ -3119,7 +3112,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self     The CharSequence to strip the leading spaces from
      * @return the stripped toString() of the CharSequence
-     * @see #stripIndent(String)
      * @since 1.8.2
      */
     public static String stripIndent(CharSequence self) {
@@ -3219,7 +3211,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self       The CharSequence to strip the margin from
      * @param marginChar Any character that serves as margin delimiter
      * @return the stripped String
-     * @see #stripMargin(String, char)
      * @since 1.8.2
      */
     public static String stripMargin(CharSequence self, char marginChar) {
@@ -3243,7 +3234,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self       The CharSequence to strip the margin from
      * @param marginChar Any character that serves as margin delimiter
      * @return the stripped CharSequence
-     * @see #stripMargin(String, String)
      * @since 1.8.2
      */
     public static String stripMargin(CharSequence self, CharSequence marginChar) {
@@ -3323,7 +3313,20 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * @since 2.3.7
      */
     public static String take(GString self, int num) {
-        return (String) take(self.toString(), num);
+        return take(self.toString(), num);
+    }
+
+    /**
+     * A String variant of the equivalent CharSequence method.
+     *
+     * @param self the original String
+     * @param num  the number of chars to take from this String
+     * @return a String consisting of the first <code>num</code> chars,
+     *         or else the whole String if it has less then <code>num</code> elements.
+     * @since 2.5.5
+     */
+    public static String take(String self, int num) {
+        return (String) take((CharSequence) self, num);
     }
 
     /**
@@ -3332,10 +3335,10 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      * <p>
      * <pre class="groovyTestCase">
      * def text = "Groovy"
-     * assert text.takeWhile{ it < 'A' } == ''
-     * assert text.takeWhile{ it < 'Z' } == 'G'
+     * assert text.takeWhile{ it {@code <} 'A' } == ''
+     * assert text.takeWhile{ it {@code <} 'Z' } == 'G'
      * assert text.takeWhile{ it != 'v' } == 'Groo'
-     * assert text.takeWhile{ it < 'z' } == 'Groovy'
+     * assert text.takeWhile{ it {@code <} 'z' } == 'Groovy'
      * </pre>
      *
      * @param self      the original CharSequence
@@ -3374,7 +3377,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return a BigDecimal
-     * @see #toBigDecimal(String)
      * @since 1.8.2
      */
     public static BigDecimal toBigDecimal(CharSequence self) {
@@ -3395,7 +3397,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return a BigInteger
-     * @see #toBigInteger(String)
      * @since 1.8.2
      */
     public static BigInteger toBigInteger(CharSequence self) {
@@ -3447,7 +3448,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return a Double
-     * @see #toDouble(String)
      * @since 1.8.2
      */
     public static Double toDouble(CharSequence self) {
@@ -3468,7 +3468,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return a Float
-     * @see #toFloat(String)
      * @since 1.8.2
      */
     public static Float toFloat(CharSequence self) {
@@ -3582,7 +3581,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return a List of characters (a 1-character String)
-     * @see #toSet(String)
      * @since 1.8.2
      */
     public static List<String> toList(CharSequence self) {
@@ -3609,7 +3607,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return a Long
-     * @see #toLong(String)
      * @since 1.8.2
      */
     public static Long toLong(CharSequence self) {
@@ -3630,7 +3627,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self a CharSequence
      * @return a Set of unique characters (each a 1-character String)
-     * @see #toSet(String)
      * @since 1.8.2
      */
     public static Set<String> toSet(CharSequence self) {
@@ -3725,7 +3721,6 @@ public class StringGroovyMethods extends DefaultGroovyMethodsSupport {
      *
      * @param self A CharSequence to unexpand
      * @return an unexpanded String
-     * @see #unexpand(String)
      * @since 1.8.2
      */
     public static String unexpand(CharSequence self) {

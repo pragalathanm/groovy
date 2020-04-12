@@ -44,10 +44,6 @@ import static org.codehaus.groovy.runtime.InvokerHelper.MAIN_METHOD_NAME;
 
 /**
  * Represents a groovy shell capable of running arbitrary groovy scripts
- *
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @author Guillaume Laforge
- * @author Paul King
  */
 public class GroovyShell extends GroovyObjectSupport {
 
@@ -90,7 +86,7 @@ public class GroovyShell extends GroovyObjectSupport {
     public GroovyShell(ClassLoader parent) {
         this(parent, new Binding(), CompilerConfiguration.DEFAULT);
     }
-    
+
     public GroovyShell(ClassLoader parent, Binding binding, final CompilerConfiguration config) {
         if (binding == null) {
             throw new IllegalArgumentException("Binding must not be null.");
@@ -99,15 +95,21 @@ public class GroovyShell extends GroovyObjectSupport {
             throw new IllegalArgumentException("Compiler configuration must not be null.");
         }
         final ClassLoader parentLoader = (parent!=null)?parent:GroovyShell.class.getClassLoader();
-        this.loader = AccessController.doPrivileged(new PrivilegedAction<GroovyClassLoader>() {
-            public GroovyClassLoader run() {
-                return new GroovyClassLoader(parentLoader,config);
-            }
-        });
-        this.context = binding;        
+
+        if (parentLoader instanceof GroovyClassLoader
+            && ((GroovyClassLoader) parentLoader).hasCompatibleConfiguration(config)) {
+          this.loader = (GroovyClassLoader) parentLoader;
+        } else {
+          this.loader = AccessController.doPrivileged(new PrivilegedAction<GroovyClassLoader>() {
+              public GroovyClassLoader run() {
+                  return new GroovyClassLoader(parentLoader,config);
+              }
+          });
+        }
+        this.context = binding;
         this.config = config;
     }
-    
+
     public void resetLoadedClasses() {
         loader.clearCache();
     }
@@ -303,9 +305,10 @@ public class GroovyShell extends GroovyObjectSupport {
         Constructor constructor = null;
         Runnable runnable = null;
         Throwable reason = null;
+
         try {
             // first, fetch the constructor taking String[] as parameter
-            constructor = scriptClass.getConstructor((new String[]{}).getClass());
+            constructor = scriptClass.getConstructor(String[].class);
             try {
                 // instantiate a runnable and run it
                 runnable = (Runnable) constructor.newInstance(new Object[]{args});

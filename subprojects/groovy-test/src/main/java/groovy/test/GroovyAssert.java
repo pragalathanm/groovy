@@ -26,8 +26,11 @@ import org.junit.Test;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.isAtLeast;
 
 /**
  * <p>{@code GroovyAssert} contains a set of static assertion and test helper methods and is supposed to be a Groovy
@@ -51,10 +54,6 @@ import java.util.logging.Logger;
  * </p>
  *
  * @see groovy.util.GroovyTestCase
- *
- * @author Paul King
- * @author Andre Steingress
- *
  * @since 2.3
  */
 public class GroovyAssert extends org.junit.Assert {
@@ -335,6 +334,19 @@ public class GroovyAssert extends org.junit.Assert {
             notYetImplementedFlag.set(null);
         }
         return true;
+    }
+
+    /**
+     * @return true if the JDK version is at least the version given by specVersion (e.g. "1.8", "9.0")
+     * @since 2.5.7
+     */
+    public static boolean isAtLeastJdk(String specVersion) {
+        boolean result = false;
+        try {
+            result = isAtLeast(new BigDecimal(System.getProperty("java.specification.version")), specVersion);
+        } catch (Exception ignore) {
+        }
+        return result;
     }
 
     private static String buildExceptionList(Throwable th) {

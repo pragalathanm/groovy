@@ -25,10 +25,10 @@ The Groovy development team
 :build-icon: http://ci.groovy-lang.org:8111/app/rest/builds/buildType:(id:Groovy_Jdk7Build)/statusIcon
 :travis-build-icon: https://api.travis-ci.org/apache/groovy.svg?branch=GROOVY_2_5_X
 :noheader:
-:groovy-www: http://groovy-lang.org/
+:groovy-www: https://groovy-lang.org/
 :groovy-ci: http://ci.groovy-lang.org?guest=1
 :travis-ci: https://travis-ci.org/apache/groovy
-:jdk: http://www.oracle.com/technetwork/java/javase/downloads
+:jdk: https://www.oracle.com/technetwork/java/javase/downloads
 :bintray-latest-version-image: https://api.bintray.com/packages/groovy/maven/groovy/images/download.png
 :bintray-latest-version-link: https://bintray.com/groovy/maven/groovy/_latestVersion
 :bintray-watch-image: https://www.bintray.com/docs/images/bintray_badge_color.png
@@ -50,9 +50,13 @@ image:{travis-build-icon}[travis build status, link={travis-ci}]
 image:{bintray-download-icon}[bintray download, link={bintray-latest-version-link}]
 image:{apache-groovy-twitter-icon}[follow on Twitter, link={apache-groovy-twitter-link}]
 
-{groovy-www}[Groovy] is a powerful, optionally typed and dynamic language, with static-typing and static compilation capabilities, for the Java platform aimed at multiplying developers’ productivity thanks to a concise, familiar and easy to learn syntax.
+{groovy-www}[Groovy] is a powerful multi-faceted programming language for the JVM platform.
+It supports a spectrum of programming styles incorporating features from dynamic languages such as optional and duck typing, but also
+static compilation and static type checking at levels similar to or greater than Java through its extensible static type checker.
+It aims to greatly increase developer productivity with many powerful features but also a concise, familiar and easy to learn syntax.
 
-It integrates smoothly with any Java program, and immediately delivers to your application powerful features, including scripting capabilities, Domain-Specific Language authoring, runtime and compile-time meta-programming and functional programming. 
+It integrates smoothly with any Java class or library, and immediately delivers to your application powerful capabilities,
+including scripting support, Domain-Specific Language authoring, runtime and compile-time meta-programming and functional programming. 
 
 == Downloading
 
@@ -88,7 +92,7 @@ Alternatively, you can download the source distribution and unpack it.
 
 If obtaining the source from the source distribution and you intend to build from source,
 you also need to https://gradle.org/downloads/[download] and install http://gradle.org/[Gradle] and
-use the downloaded Gradle to execute one bootstrap step.
+use it to execute one bootstrap step.
 
 ==== Bootstrapping Gradle
 

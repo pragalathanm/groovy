@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
@@ -56,10 +57,10 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.List;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
+
 /**
  * java 5 based functions
- *
- * @author Jochen Theodorou
  */
 public class Java5 implements VMPlugin {
     private static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
@@ -252,7 +253,9 @@ public class Java5 implements VMPlugin {
         for (AnnotationNode an : annotations) {
             plugin.configureAnnotationNodeFromDefinition(an, node);
         }
-        plugin.configureAnnotationNodeFromDefinition(node, node);
+        if (!node.getClassNode().getName().equals("java.lang.annotation.Retention")) {
+            plugin.configureAnnotationNodeFromDefinition(node, node);
+        }
     }
 
     private void configureAnnotation(AnnotationNode node, Annotation annotation) {
@@ -355,8 +358,7 @@ public class Java5 implements VMPlugin {
 
     private static void setMethodDefaultValue(MethodNode mn, Method m) {
         Object defaultValue = m.getDefaultValue();
-        ConstantExpression cExp = ConstantExpression.NULL;
-        if (defaultValue!=null) cExp = new ConstantExpression(defaultValue);
+        ConstantExpression cExp = defaultValue != null ? new ConstantExpression(defaultValue) : nullX();
         mn.setCode(new ReturnStatement(cExp));
         mn.setAnnotationDefault(true);
     }
@@ -374,7 +376,7 @@ public class Java5 implements VMPlugin {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method m : methods) {
                 ClassNode ret = makeClassNode(compileUnit, m.getGenericReturnType(), m.getReturnType());
-                Parameter[] params = makeParameters(compileUnit, m.getGenericParameterTypes(), m.getParameterTypes(), m.getParameterAnnotations());
+                Parameter[] params = processParameters(compileUnit, m);
                 ClassNode[] exceptions = makeClassNodes(compileUnit, m.getGenericExceptionTypes(), m.getExceptionTypes());
                 MethodNode mn = new MethodNode(m.getName(), m.getModifiers(), ret, params, exceptions, null);
                 mn.setSynthetic(m.isSynthetic());
@@ -385,14 +387,18 @@ public class Java5 implements VMPlugin {
             }
             Constructor[] constructors = clazz.getDeclaredConstructors();
             for (Constructor ctor : constructors) {
-                Parameter[] params = makeParameters(
-                        compileUnit,
-                        ctor.getGenericParameterTypes(),
-                        ctor.getParameterTypes(),
-                        getConstructorParameterAnnotations(ctor)
-                );
+                Type[] types = ctor.getGenericParameterTypes();
+                Parameter[] params1 = Parameter.EMPTY_ARRAY;
+                if (types.length > 0) {
+                    params1 = new Parameter[types.length];
+                    for (int i = 0; i < params1.length; i++) {
+                        params1[i] = makeParameter(compileUnit, types[i], ctor.getParameterTypes()[i], getConstructorParameterAnnotations(ctor)[i], "param" + i);
+                    }
+                }
+                Parameter[] params = params1;
                 ClassNode[] exceptions = makeClassNodes(compileUnit, ctor.getGenericExceptionTypes(), ctor.getExceptionTypes());
-                classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
+                ConstructorNode cn = classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
+                setAnnotationMetaData(ctor.getAnnotations(), cn);
             }
 
             Class sc = clazz.getSuperclass();
@@ -409,6 +415,18 @@ public class Java5 implements VMPlugin {
         } catch (MalformedParameterizedTypeException e) {
             throw new RuntimeException("Unable to configure class node for class "+classNode.toString(false)+" due to malformed parameterized types", e);
         }
+    }
+
+    protected Parameter[] processParameters(CompileUnit compileUnit, Method m) {
+        Type[] types = m.getGenericParameterTypes();
+        Parameter[] params = Parameter.EMPTY_ARRAY;
+        if (types.length > 0) {
+            params = new Parameter[types.length];
+            for (int i = 0; i < params.length; i++) {
+                params[i] = makeParameter(compileUnit, types[i], m.getParameterTypes()[i], m.getParameterAnnotations()[i], "param" + i);
+            }
+        }
+        return params;
     }
 
     /**
@@ -437,18 +455,20 @@ public class Java5 implements VMPlugin {
         Annotation[][] annotations = constructor.getParameterAnnotations();
         int diff = parameterCount - annotations.length;
         if (diff > 0) {
-            // May happen on JDK8 and below, but we only expect to have to
-            // add a single element to the front of the array to account
-            // for the synthetic outer reference
-            if (diff > 1) {
+            // May happen on JDK8 and below. We add elements to the front of the array to account for the synthetic params:
+            // - for an inner class we expect one param to account for the synthetic outer reference
+            // - for an enum we expect two params to account for the synthetic name and ordinal
+            if ((!constructor.getDeclaringClass().isEnum() && diff > 1) || diff > 2) {
                 throw new GroovyBugError(
                         "Constructor parameter annotations length [" + annotations.length + "] " +
                         "does not match the parameter length: " + constructor
                 );
             }
             Annotation[][] adjusted = new Annotation[parameterCount][];
-            adjusted[0] = EMPTY_ANNOTATION_ARRAY;
-            System.arraycopy(annotations, 0, adjusted, 1, annotations.length);
+            for (int i = 0; i < diff; i++) {
+                adjusted[i] = EMPTY_ANNOTATION_ARRAY;
+            }
+            System.arraycopy(annotations, 0, adjusted, diff, annotations.length);
             return adjusted;
         }
         return annotations;
@@ -497,20 +517,9 @@ public class Java5 implements VMPlugin {
         return back.getPlainNodeReference();
     }
 
-    private Parameter[] makeParameters(CompileUnit cu, Type[] types, Class[] cls, Annotation[][] parameterAnnotations) {
-        Parameter[] params = Parameter.EMPTY_ARRAY;
-        if (types.length > 0) {
-            params = new Parameter[types.length];
-            for (int i = 0; i < params.length; i++) {
-                params[i] = makeParameter(cu, types[i], cls[i], parameterAnnotations[i], i);
-            }
-        }
-        return params;
-    }
-
-    private Parameter makeParameter(CompileUnit cu, Type type, Class cl, Annotation[] annotations, int idx) {
+    protected Parameter makeParameter(CompileUnit cu, Type type, Class cl, Annotation[] annotations, String name) {
         ClassNode cn = makeClassNode(cu, type, cl);
-        Parameter parameter = new Parameter(cn, "param" + idx);
+        Parameter parameter = new Parameter(cn, name);
         setAnnotationMetaData(annotations, parameter);
         return parameter;
     }

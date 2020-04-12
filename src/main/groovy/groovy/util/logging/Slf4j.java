@@ -38,6 +38,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Locale;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.nullX;
+
 /**
  * This local transform adds a logging ability to your program using
  * LogBack logging. Every method call on a unbound variable named <i>log</i>
@@ -56,8 +58,6 @@ import java.util.Locale;
  * If the expression exp is a constant or only a variable access the method call will
  * not be transformed. But this will still cause a call on the injected logger.
  *
- * @author Hamlet D'Arcy
- * @author Alberto Mijares
  * @since 1.8.0
  */
 @java.lang.annotation.Documented
@@ -87,10 +87,12 @@ public @interface Slf4j {
                             new ConstantExpression(getCategoryName(classNode, categoryName))));
         }
 
+        @Override
         public boolean isLoggingMethod(String methodName) {
             return methodName.matches("error|warn|info|debug|trace");
         }
 
+        @Override
         public Expression wrapLoggingMethodCall(Expression logVariable, String methodName, Expression originalExpression) {
             MethodCallExpression condition = new MethodCallExpression(
                     logVariable,
@@ -101,7 +103,7 @@ public @interface Slf4j {
             return new TernaryExpression(
                     new BooleanExpression(condition),
                     originalExpression,
-                    ConstantExpression.NULL);
+                    nullX());
         }
     }
 

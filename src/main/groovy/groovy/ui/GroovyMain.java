@@ -199,6 +199,9 @@ public class GroovyMain {
         @Option(names = {"-pa", "--parameters"}, description = "Generate metadata for reflection on method parameter names (jdk8+ only)")
         private boolean parameterMetadata;
 
+        @Option(names = {"-pr", "--enable-preview"}, description = "Enable preview Java features (JEP 12) (jdk12+ only)")
+        private boolean previewFeatures;
+
         @Option(names = "-l", arity = "0..1", paramLabel = "<port>", description = "Listen on a port and process inbound lines (default: 1960)")
         private String port;
 
@@ -241,6 +244,7 @@ public class GroovyMain {
             main.debug = debug;
             main.conf.setDebug(main.debug);
             main.conf.setParameters(parameterMetadata);
+            main.conf.setPreviewFeatures(previewFeatures);
             main.processFiles = lineByLine || lineByLinePrint;
             main.autoOutput = lineByLinePrint;
             main.editFiles = extension != null;
@@ -277,7 +281,7 @@ public class GroovyMain {
             }
 
             if (indy) {
-                CompilerConfiguration.DEFAULT.getOptimizationOptions().put("indy", true);
+                System.setProperty("groovy.target.indy", "true");
                 main.conf.getOptimizationOptions().put("indy", true);
             }
 
@@ -475,7 +479,7 @@ public class GroovyMain {
      * Process the input files.
      */
     private void processFiles() throws CompilationFailedException, IOException, URISyntaxException {
-        GroovyShell groovy = new GroovyShell(conf);
+        GroovyShell groovy = new GroovyShell(Thread.currentThread().getContextClassLoader(), conf);
         setupContextClassLoader(groovy);
 
         Script s = groovy.parse(getScriptSource(isScriptFile, script));
@@ -583,7 +587,7 @@ public class GroovyMain {
      * Process the standard, single script with args.
      */
     private void processOnce() throws CompilationFailedException, IOException, URISyntaxException {
-        GroovyShell groovy = new GroovyShell(conf);
+        GroovyShell groovy = new GroovyShell(Thread.currentThread().getContextClassLoader(), conf);
         setupContextClassLoader(groovy);
         groovy.run(getScriptSource(isScriptFile, script), args);
     }

@@ -49,7 +49,7 @@ import java.lang.annotation.Target;
  * <pre>
  * class MemoizedExample {
  * 
- *     private final Closure memoizedSum = { int n1, int n2 ->
+ *     private final Closure memoizedSum = { int n1, int n2 {@code ->}
  *         private$method$memoizedSum(n1,n2)
  *     }.memoize()
  * 
@@ -124,8 +124,8 @@ import java.lang.annotation.Target;
  * // increment is invoked so incrementChange is true.
  * assert incrementChange
  * </pre>
- * 
- * @author Andrey Bloschetsov
+ *
+ * @since 2.2.0
  */
 @java.lang.annotation.Documented
 @Retention(RetentionPolicy.SOURCE)

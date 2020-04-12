@@ -30,15 +30,17 @@ import java.awt.*
 import java.awt.image.BufferedImage
 import java.util.prefs.Preferences
 
+import static javax.swing.JSplitPane.HORIZONTAL_SPLIT
 import static javax.swing.JSplitPane.VERTICAL_SPLIT
 
-def prefs = Preferences.userNodeForPackage(Console)
+Preferences prefs = Preferences.userNodeForPackage(Console)
 def detachedOutputFlag = prefs.getBoolean('detachedOutput', false)
 outputWindow = frame(visible:false, defaultCloseOperation: WindowConstants.HIDE_ON_CLOSE) {
     blank = glue()
     blank.preferredSize = [0, 0] as Dimension
 }
-splitPane = splitPane(resizeWeight: 0.5, orientation: VERTICAL_SPLIT) {
+splitPane = splitPane(resizeWeight: 0.5, orientation:
+        prefs.getBoolean('orientationVertical', true) ? VERTICAL_SPLIT : HORIZONTAL_SPLIT) {
     inputEditor = widget(new ConsoleTextEditor(), border:emptyBorder(0))
     buildOutputArea(prefs)
 }
